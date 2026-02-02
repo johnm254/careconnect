@@ -13,6 +13,7 @@ import {
   LogOut,
   ChevronDown,
   Stethoscope,
+  Briefcase,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -50,6 +51,7 @@ export function Layout({ children }: LayoutProps) {
     { path: '/appointments', label: 'Appointments', icon: Calendar, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
     { path: '/staff', label: 'Staff Directory', icon: UserCog, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
     { path: '/billing', label: 'Billing', icon: Receipt, roles: ['admin', 'doctor', 'receptionist'] },
+    { path: '/hr', label: 'HR Management', icon: Briefcase, roles: ['admin'] },
     { path: '/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
   ];
 
