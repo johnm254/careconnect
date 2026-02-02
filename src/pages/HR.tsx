@@ -43,9 +43,11 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  DollarSign,
 } from 'lucide-react';
 import { mockEmployees, mockLeaveRequests, mockAttendanceRecords, mockLeaveBalances } from '@/data/hrMockData';
 import { Employee, LeaveRequest, AttendanceRecord } from '@/types/hr';
+import { PayrollSection } from '@/components/hr/PayrollSection';
 
 export default function HR() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -186,6 +188,7 @@ export default function HR() {
             <TabsTrigger value="employees">Employee Records</TabsTrigger>
             <TabsTrigger value="leave">Leave Management</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="payroll">Payroll</TabsTrigger>
           </TabsList>
 
           {/* Employees Tab */}
@@ -567,6 +570,11 @@ export default function HR() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Payroll Tab */}
+          <TabsContent value="payroll">
+            <PayrollSection employees={employees} />
           </TabsContent>
         </Tabs>
       </div>
