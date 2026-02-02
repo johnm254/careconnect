@@ -11,6 +11,7 @@ import Appointments from "./pages/Appointments";
 import Staff from "./pages/Staff";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
+import HR from "./pages/HR";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const AppRoutes = () => (
     <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
     <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
     <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+    <Route path="/hr" element={<ProtectedRoute><HR /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
