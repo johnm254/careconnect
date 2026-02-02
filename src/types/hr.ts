@@ -52,3 +52,43 @@ export interface LeaveBalance {
     personal: number;
   };
 }
+
+export interface PayrollRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  month: string; // YYYY-MM format
+  baseSalary: number;
+  allowances: {
+    housing: number;
+    transport: number;
+    medical: number;
+    other: number;
+  };
+  deductions: {
+    tax: number;
+    insurance: number;
+    retirement: number;
+    other: number;
+  };
+  overtime: {
+    hours: number;
+    rate: number;
+    amount: number;
+  };
+  grossSalary: number;
+  netSalary: number;
+  status: 'pending' | 'processed' | 'paid';
+  processedAt?: string;
+  paidAt?: string;
+}
+
+export interface PaySlip {
+  id: string;
+  payrollId: string;
+  employeeId: string;
+  employeeName: string;
+  month: string;
+  generatedAt: string;
+  downloadUrl?: string;
+}
