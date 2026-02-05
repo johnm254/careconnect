@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { RoleProvider, useRole } from "@/contexts/RoleContext";
 import Login from "./pages/Login";
+ import BookConsultation from "./pages/BookConsultation";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
@@ -35,6 +36,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+     <Route path="/book-consultation" element={<BookConsultation />} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
     <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
