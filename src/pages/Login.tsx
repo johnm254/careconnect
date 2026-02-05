@@ -126,6 +126,25 @@ export default function Login() {
               <Button type="submit" className="w-full" size="lg">
                 Sign In
               </Button>
+               
+               <div className="relative">
+                 <div className="absolute inset-0 flex items-center">
+                   <span className="w-full border-t" />
+                 </div>
+                 <div className="relative flex justify-center text-xs uppercase">
+                   <span className="bg-background px-2 text-muted-foreground">or</span>
+                 </div>
+               </div>
+               
+               <Button
+                 type="button"
+                 variant="outline"
+                 className="w-full"
+                 size="lg"
+                 onClick={() => navigate('/book-consultation')}
+               >
+                 Book a Consultation
+               </Button>
             </form>
           </CardContent>
         </Card>
