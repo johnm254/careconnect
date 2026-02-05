@@ -1,4 +1,4 @@
- import { useState } from 'react';
+ import { useState, useCallback } from 'react';
  import { useNavigate } from 'react-router-dom';
  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
  import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@
  import { toast } from '@/hooks/use-toast';
  import { CalendarIcon, Stethoscope, User, Phone, Mail, Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
  import { cn } from '@/lib/utils';
+ import { supabase } from '@/integrations/supabase/client';
  import { format } from 'date-fns';
  
  const timeSlots = [
@@ -91,13 +92,43 @@
      else if (step === 3 && validateStep3()) handleSubmit();
    };
  
-   const handleSubmit = () => {
+     const sendConfirmationEmail = useCallback(async (ref: string, doctor: typeof mockStaff[0] | undefined) => {
+       if (!formData.email) return;
+ 
+       try {
+         const { data, error } = await supabase.functions.invoke('send-booking-confirmation', {
+           body: {
+             patientName: formData.name,
+             patientEmail: formData.email,
+             patientPhone: formData.phone,
+             doctorName: doctor?.name || '',
+             department: formData.department,
+             date: formData.date ? format(formData.date, 'PPP') : '',
+             time: formData.time,
+             bookingRef: ref,
+             reason: formData.reason,
+           },
+         });
+ 
+         if (error) {
+           console.error('Error sending confirmation:', error);
+         } else {
+           console.log('Confirmation sent:', data);
+         }
+       } catch (err) {
+         console.error('Failed to send confirmation:', err);
+       }
+     }, [formData]);
+ 
+     const handleSubmit = () => {
      setIsSubmitting(true);
      // Simulate API call
      setTimeout(() => {
        const ref = `CNS-${Date.now().toString().slice(-6)}`;
        setBookingRef(ref);
-       setBookingComplete(true);
+         setBookingComplete(true);
+         // Send confirmation email in the background
+         sendConfirmationEmail(ref, selectedDoctor);
        setIsSubmitting(false);
        toast({
          title: 'Booking Confirmed!',
@@ -138,9 +169,14 @@
                  <span className="font-medium">{formData.time}</span>
                </div>
              </div>
-             <p className="text-sm text-muted-foreground">
-               Please arrive 15 minutes before your appointment time. Bring any relevant medical records.
+           {formData.email && (
+             <p className="text-sm text-primary">
+               ✉️ A confirmation email has been sent to {formData.email}
              </p>
+           )}
+           <p className="text-sm text-muted-foreground">
+             Please arrive 15 minutes before your appointment time. Bring any relevant medical records.
+           </p>
              <Button className="w-full" onClick={() => navigate('/')}>
                Return to Home
              </Button>
