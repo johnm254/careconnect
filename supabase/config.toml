@@ -1,1 +1,4 @@
-project_id = "ieubpwmytpobdppivmme"
+ project_id = "ieubpwmytpobdppivmme"
+ 
+ [functions.send-booking-confirmation]
+ verify_jwt = false
