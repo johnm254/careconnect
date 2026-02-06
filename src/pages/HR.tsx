@@ -36,18 +36,19 @@ import {
   Search,
   Plus,
   UserCheck,
-  UserX,
   Building,
   Mail,
   Phone,
   CheckCircle,
   XCircle,
-  AlertCircle,
-  DollarSign,
 } from 'lucide-react';
 import { mockEmployees, mockLeaveRequests, mockAttendanceRecords, mockLeaveBalances } from '@/data/hrMockData';
 import { Employee, LeaveRequest, AttendanceRecord } from '@/types/hr';
 import { PayrollSection } from '@/components/hr/PayrollSection';
+import { motion } from 'framer-motion';
+import { Spotlight } from '@/components/ui/spotlight';
+import { TextReveal, GradientText } from '@/components/ui/text-reveal';
+import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
 
 export default function HR() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,53 +134,66 @@ export default function HR() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">HR Management</h1>
-          <p className="text-muted-foreground">Manage employees, leave requests, and attendance</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <TextReveal>
+            <h1 className="text-3xl font-bold tracking-tight">
+              <GradientText>HR Management</GradientText>
+            </h1>
+          </TextReveal>
+          <TextReveal delay={0.1}>
+            <p className="text-muted-foreground">Manage employees, leave requests, and attendance</p>
+          </TextReveal>
+        </motion.div>
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{employees.length}</div>
-              <p className="text-xs text-muted-foreground">{employees.filter((e) => e.status === 'active').length} active</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Present Today</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{presentToday}</div>
-              <p className="text-xs text-muted-foreground">Clocked in</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">On Leave</CardTitle>
-              <CalendarOff className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{onLeaveToday}</div>
-              <p className="text-xs text-muted-foreground">Today</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingLeaves}</div>
-              <p className="text-xs text-muted-foreground">Leave requests</p>
-            </CardContent>
-          </Card>
+          {[
+            { label: 'Total Employees', value: employees.length, sub: `${employees.filter((e) => e.status === 'active').length} active`, icon: Users, gradient: 'from-blue-500/20 to-blue-600/5' },
+            { label: 'Present Today', value: presentToday, sub: 'Clocked in', icon: UserCheck, gradient: 'from-emerald-500/20 to-emerald-600/5' },
+            { label: 'On Leave', value: onLeaveToday, sub: 'Today', icon: CalendarOff, gradient: 'from-amber-500/20 to-amber-600/5' },
+            { label: 'Pending Requests', value: pendingLeaves, sub: 'Leave requests', icon: Clock, gradient: 'from-violet-500/20 to-violet-600/5' },
+          ].map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+              >
+                <CardContainer containerClassName="w-full">
+                  <CardBody className="w-full">
+                    <Spotlight className="w-full p-0">
+                      <Card className="border-0 bg-transparent shadow-none">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                          <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                          <CardItem translateZ={30}>
+                            <motion.div 
+                              className={`rounded-xl p-2 bg-gradient-to-br ${stat.gradient} border border-border/30 backdrop-blur-sm`}
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            >
+                              <Icon className="h-4 w-4 text-primary" />
+                            </motion.div>
+                          </CardItem>
+                        </CardHeader>
+                        <CardContent>
+                          <CardItem translateZ={20}>
+                            <div className="text-2xl font-bold">{stat.value}</div>
+                            <p className="text-xs text-muted-foreground">{stat.sub}</p>
+                          </CardItem>
+                        </CardContent>
+                      </Card>
+                    </Spotlight>
+                  </CardBody>
+                </CardContainer>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Tabs */}
