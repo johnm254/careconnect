@@ -10,6 +10,8 @@ import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
+import { useLoading } from '@/hooks/use-loading';
+import { DashboardSkeleton } from '@/components/ui/skeleton-shimmer';
 
 const statCards = [
   { label: 'Total Patients', value: mockDashboardStats.totalPatients, icon: Users, gradient: 'from-blue-500/20 to-blue-600/5' },
@@ -27,8 +29,17 @@ const activityIcons: Record<string, typeof Activity> = {
 export default function Dashboard() {
   const { currentRole } = useRole();
   const navigate = useNavigate();
+  const isLoading = useLoading(800);
 
   const todayAppointments = mockAppointments.filter(apt => apt.date === '2025-01-30');
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <DashboardSkeleton />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
