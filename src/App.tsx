@@ -2,10 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { RoleProvider, useRole } from "@/contexts/RoleContext";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { AnimatePresence } from "framer-motion";
+import { PageTransition } from "@/components/layout/PageTransition";
 import Login from "./pages/Login";
- import BookConsultation from "./pages/BookConsultation";
+import BookConsultation from "./pages/BookConsultation";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
@@ -33,32 +36,40 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
-     <Route path="/book-consultation" element={<BookConsultation />} />
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-    <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-    <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
-    <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-    <Route path="/hr" element={<ProtectedRoute><HR /></ProtectedRoute>} />
-    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PublicRoute><PageTransition><Login /></PageTransition></PublicRoute>} />
+        <Route path="/book-consultation" element={<PageTransition><BookConsultation /></PageTransition>} />
+        <Route path="/dashboard" element={<ProtectedRoute><PageTransition><Dashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/patients" element={<ProtectedRoute><PageTransition><Patients /></PageTransition></ProtectedRoute>} />
+        <Route path="/appointments" element={<ProtectedRoute><PageTransition><Appointments /></PageTransition></ProtectedRoute>} />
+        <Route path="/staff" element={<ProtectedRoute><PageTransition><Staff /></PageTransition></ProtectedRoute>} />
+        <Route path="/billing" element={<ProtectedRoute><PageTransition><Billing /></PageTransition></ProtectedRoute>} />
+        <Route path="/hr" element={<ProtectedRoute><PageTransition><HR /></PageTransition></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><PageTransition><Settings /></PageTransition></ProtectedRoute>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <RoleProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </RoleProvider>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <RoleProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AnimatedRoutes />
+          </BrowserRouter>
+        </RoleProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

@@ -24,6 +24,7 @@ import {
 import { UserRole } from '@/types/hospital';
 import { motion } from 'framer-motion';
 import { FloatingParticles } from '@/components/ui/floating-particles';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 interface LayoutProps {
   children: ReactNode;
@@ -77,19 +78,22 @@ export function Layout({ children }: LayoutProps) {
           
           {/* Logo */}
           <motion.div 
-            className="relative z-10 flex h-16 items-center gap-3 border-b border-border/50 px-6"
+            className="relative z-10 flex h-16 items-center justify-between border-b border-border/50 px-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <motion.div 
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <Stethoscope className="h-5 w-5 text-primary" />
-            </motion.div>
-            <span className="text-lg font-bold">MedCare HMS</span>
+            <div className="flex items-center gap-3">
+              <motion.div 
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm"
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Stethoscope className="h-5 w-5 text-primary" />
+              </motion.div>
+              <span className="text-lg font-bold">MedCare HMS</span>
+            </div>
+            <ThemeToggle />
           </motion.div>
 
           {/* Role Selector */}
