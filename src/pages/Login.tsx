@@ -14,6 +14,7 @@ import { Spotlight } from '@/components/ui/spotlight';
 import { GradientOrb } from '@/components/ui/animated-gradient';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { FloatingParticles } from '@/components/ui/floating-particles';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const roles: { role: UserRole; label: string; description: string; icon: typeof Shield }[] = [
   { role: 'admin', label: 'Administrator', description: 'Full system access', icon: Shield },
@@ -38,6 +39,16 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-background">
+      {/* Theme Toggle - Fixed Top Right */}
+      <motion.div
+        className="fixed right-4 top-4 z-50"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <ThemeToggle />
+      </motion.div>
+
       {/* Background Effects */}
       <div className="absolute inset-0">
         <GradientOrb className="left-1/4 top-1/4" />

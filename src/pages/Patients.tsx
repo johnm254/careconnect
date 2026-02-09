@@ -14,12 +14,15 @@ import { Search, UserPlus, Eye, Phone, Mail, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
+import { useLoading } from '@/hooks/use-loading';
+import { TableSkeleton, SkeletonShimmer } from '@/components/ui/skeleton-shimmer';
 
 export default function Patients() {
   const { currentRole } = useRole();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const isLoading = useLoading(600);
 
   const filteredPatients = mockPatients.filter(
     (patient) =>
@@ -29,6 +32,27 @@ export default function Patients() {
   );
 
   const canAddPatient = currentRole === 'admin' || currentRole === 'receptionist';
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <SkeletonShimmer className="h-8 w-32" />
+            <SkeletonShimmer className="h-4 w-64" />
+          </div>
+          <Spotlight>
+            <Card className="border-0 bg-transparent shadow-none">
+              <CardContent className="p-4">
+                <SkeletonShimmer className="h-10 w-full" />
+              </CardContent>
+            </Card>
+          </Spotlight>
+          <TableSkeleton rows={6} />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
