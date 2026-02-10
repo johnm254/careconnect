@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +13,8 @@ import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
+import { useLoading } from '@/hooks/use-loading';
+import { PatientCardSkeleton } from '@/components/ui/skeleton-shimmer';
 
 const departments = ['All', 'Cardiology', 'Pediatrics', 'General Medicine', 'Orthopedics'];
 
@@ -21,6 +23,7 @@ export default function StaffDirectory() {
   const [filterDepartment, setFilterDepartment] = useState('All');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const isLoading = useLoading(800);
 
   const filteredStaff = mockStaff.filter((staff) => {
     const searchMatch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -29,6 +32,24 @@ export default function StaffDirectory() {
     const roleMatch = filterRole === 'all' || staff.role === filterRole;
     return searchMatch && deptMatch && roleMatch;
   });
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+            <div className="h-4 w-64 rounded-lg bg-muted animate-pulse" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <PatientCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

@@ -25,6 +25,7 @@ import { UserRole } from '@/types/hospital';
 import { motion } from 'framer-motion';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcut';
 
 interface LayoutProps {
   children: ReactNode;
@@ -47,6 +48,7 @@ const roleColors: Record<UserRole, string> = {
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { currentRole, setCurrentRole, setIsLoggedIn } = useRole();
+  useKeyboardShortcuts();
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },

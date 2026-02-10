@@ -16,6 +16,8 @@ import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
+import { useLoading } from '@/hooks/use-loading';
+import { CardSkeleton, TableSkeleton } from '@/components/ui/skeleton-shimmer';
 
 const statusColors = {
   paid: 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30',
@@ -34,6 +36,7 @@ export default function Billing() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const isLoading = useLoading(800);
 
   const filteredInvoices = mockInvoices.filter((inv) => {
     return filterStatus === 'all' || inv.status === filterStatus;
@@ -55,6 +58,25 @@ export default function Billing() {
     { label: 'Pending', value: stats.pending, icon: Clock, gradient: 'from-amber-500/20 to-amber-600/5' },
     { label: 'Overdue', value: stats.overdue, icon: AlertCircle, gradient: 'from-red-500/20 to-red-600/5' },
   ];
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+            <div className="h-4 w-64 rounded-lg bg-muted animate-pulse" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+          <TableSkeleton rows={5} />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

@@ -6,41 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Users,
-  CalendarOff,
-  Clock,
-  Search,
-  Plus,
-  UserCheck,
-  Building,
-  Mail,
-  Phone,
-  CheckCircle,
-  XCircle,
+  Users, CalendarOff, Clock, Search, Plus, UserCheck, Building, Mail, Phone, CheckCircle, XCircle,
 } from 'lucide-react';
 import { mockEmployees, mockLeaveRequests, mockAttendanceRecords, mockLeaveBalances } from '@/data/hrMockData';
 import { Employee, LeaveRequest, AttendanceRecord } from '@/types/hr';
@@ -49,6 +26,8 @@ import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
+import { useLoading } from '@/hooks/use-loading';
+import { CardSkeleton, TableSkeleton } from '@/components/ui/skeleton-shimmer';
 
 export default function HR() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +37,7 @@ export default function HR() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isAddLeaveOpen, setIsAddLeaveOpen] = useState(false);
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const isLoading = useLoading(800);
 
   const departments = [...new Set(employees.map((e) => e.department))];
 
@@ -87,48 +67,67 @@ export default function HR() {
   const getStatusBadge = (status: Employee['status']) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>;
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-500/20 dark:text-green-400">Active</Badge>;
       case 'on-leave':
-        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">On Leave</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-500/20 dark:text-yellow-400">On Leave</Badge>;
       case 'terminated':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Terminated</Badge>;
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-500/20 dark:text-red-400">Terminated</Badge>;
     }
   };
 
   const getLeaveStatusBadge = (status: LeaveRequest['status']) => {
     switch (status) {
       case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">Pending</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-500/20 dark:text-yellow-400">Pending</Badge>;
       case 'approved':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Approved</Badge>;
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-500/20 dark:text-green-400">Approved</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Rejected</Badge>;
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-500/20 dark:text-red-400">Rejected</Badge>;
     }
   };
 
   const getAttendanceStatusBadge = (status: AttendanceRecord['status']) => {
     switch (status) {
       case 'present':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Present</Badge>;
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-500/20 dark:text-green-400">Present</Badge>;
       case 'absent':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Absent</Badge>;
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-500/20 dark:text-red-400">Absent</Badge>;
       case 'late':
-        return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">Late</Badge>;
+        return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 dark:bg-orange-500/20 dark:text-orange-400">Late</Badge>;
       case 'half-day':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Half Day</Badge>;
+        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-400">Half Day</Badge>;
     }
   };
 
   const getLeaveTypeBadge = (type: LeaveRequest['type']) => {
     const colors: Record<LeaveRequest['type'], string> = {
-      vacation: 'bg-blue-100 text-blue-700',
-      sick: 'bg-red-100 text-red-700',
-      personal: 'bg-purple-100 text-purple-700',
-      maternity: 'bg-pink-100 text-pink-700',
-      other: 'bg-gray-100 text-gray-700',
+      vacation: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
+      sick: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400',
+      personal: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400',
+      maternity: 'bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400',
+      other: 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400',
     };
     return <Badge className={`${colors[type]} hover:${colors[type]}`}>{type.charAt(0).toUpperCase() + type.slice(1)}</Badge>;
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+            <div className="h-4 w-64 rounded-lg bg-muted animate-pulse" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+          <TableSkeleton rows={5} />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -392,38 +391,19 @@ export default function HR() {
                   <CardTitle>Leave Requests</CardTitle>
                   <Dialog open={isAddLeaveOpen} onOpenChange={setIsAddLeaveOpen}>
                     <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Request Leave
+                      <Button size="sm" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        New Request
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Submit Leave Request</DialogTitle>
                       </DialogHeader>
-                      <form
-                        className="space-y-4"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const formData = new FormData(e.currentTarget);
-                          const newLeave: LeaveRequest = {
-                            id: `L${String(leaveRequests.length + 1).padStart(3, '0')}`,
-                            employeeId: formData.get('employee') as string,
-                            employeeName: employees.find((e) => e.id === formData.get('employee'))?.name || '',
-                            type: formData.get('type') as LeaveRequest['type'],
-                            startDate: formData.get('startDate') as string,
-                            endDate: formData.get('endDate') as string,
-                            reason: formData.get('reason') as string,
-                            status: 'pending',
-                            requestedAt: new Date().toISOString().split('T')[0],
-                          };
-                          setLeaveRequests((prev) => [...prev, newLeave]);
-                          setIsAddLeaveOpen(false);
-                        }}
-                      >
+                      <div className="grid gap-4 py-4">
                         <div className="space-y-2">
-                          <Label htmlFor="employee">Employee</Label>
-                          <Select name="employee" required>
+                          <Label>Employee</Label>
+                          <Select>
                             <SelectTrigger>
                               <SelectValue placeholder="Select employee" />
                             </SelectTrigger>
@@ -437,8 +417,8 @@ export default function HR() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="type">Leave Type</Label>
-                          <Select name="type" required>
+                          <Label>Leave Type</Label>
+                          <Select>
                             <SelectTrigger>
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
@@ -451,24 +431,27 @@ export default function HR() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="startDate">Start Date</Label>
-                            <Input type="date" name="startDate" required />
+                            <Label>Start Date</Label>
+                            <Input type="date" />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="endDate">End Date</Label>
-                            <Input type="date" name="endDate" required />
+                            <Label>End Date</Label>
+                            <Input type="date" />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="reason">Reason</Label>
-                          <Textarea name="reason" placeholder="Reason for leave..." required />
+                          <Label>Reason</Label>
+                          <Textarea placeholder="Reason for leave..." />
                         </div>
-                        <Button type="submit" className="w-full">
-                          Submit Request
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setIsAddLeaveOpen(false)}>
+                          Cancel
                         </Button>
-                      </form>
+                        <Button onClick={() => setIsAddLeaveOpen(false)}>Submit Request</Button>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -479,8 +462,9 @@ export default function HR() {
                     <TableRow>
                       <TableHead>Employee</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead>Reason</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead>Days</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -490,10 +474,11 @@ export default function HR() {
                       <TableRow key={leave.id}>
                         <TableCell className="font-medium">{leave.employeeName}</TableCell>
                         <TableCell>{getLeaveTypeBadge(leave.type)}</TableCell>
+                        <TableCell>{leave.startDate}</TableCell>
+                        <TableCell>{leave.endDate}</TableCell>
                         <TableCell>
-                          {leave.startDate} — {leave.endDate}
+                          {Math.ceil((new Date(leave.endDate).getTime() - new Date(leave.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1}
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate">{leave.reason}</TableCell>
                         <TableCell>{getLeaveStatusBadge(leave.status)}</TableCell>
                         <TableCell className="text-right">
                           {leave.status === 'pending' && (
@@ -501,19 +486,19 @@ export default function HR() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                                className="gap-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10"
                                 onClick={() => handleLeaveAction(leave.id, 'approved')}
                               >
-                                <CheckCircle className="mr-1 h-4 w-4" />
+                                <CheckCircle className="h-3 w-3" />
                                 Approve
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                className="gap-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
                                 onClick={() => handleLeaveAction(leave.id, 'rejected')}
                               >
-                                <XCircle className="mr-1 h-4 w-4" />
+                                <XCircle className="h-3 w-3" />
                                 Reject
                               </Button>
                             </div>
@@ -536,48 +521,29 @@ export default function HR() {
           <TabsContent value="attendance" className="space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Today's Attendance</CardTitle>
-                    <p className="text-sm text-muted-foreground">February 2, 2025</p>
-                  </div>
-                  <div className="flex gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-green-500" />
-                      <span>Present: {attendanceRecords.filter((a) => a.status === 'present').length}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-red-500" />
-                      <span>Absent: {attendanceRecords.filter((a) => a.status === 'absent').length}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-orange-500" />
-                      <span>Late: {attendanceRecords.filter((a) => a.status === 'late').length}</span>
-                    </div>
-                  </div>
-                </div>
+                <CardTitle>Today's Attendance</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Employee</TableHead>
-                      <TableHead>Clock In</TableHead>
-                      <TableHead>Clock Out</TableHead>
-                      <TableHead>Hours Worked</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Check In</TableHead>
+                      <TableHead>Check Out</TableHead>
+                      <TableHead>Hours</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {attendanceRecords.map((record) => (
                       <TableRow key={record.id}>
                         <TableCell className="font-medium">{record.employeeName}</TableCell>
-                        <TableCell>{record.clockIn || '—'}</TableCell>
-                        <TableCell>{record.clockOut || '—'}</TableCell>
-                        <TableCell>{record.hoursWorked ? `${record.hoursWorked.toFixed(2)}h` : '—'}</TableCell>
+                        <TableCell>{record.date}</TableCell>
+                        <TableCell>{record.clockIn || '-'}</TableCell>
+                        <TableCell>{record.clockOut || '-'}</TableCell>
+                        <TableCell>{record.hoursWorked ? `${record.hoursWorked}h` : '-'}</TableCell>
                         <TableCell>{getAttendanceStatusBadge(record.status)}</TableCell>
-                        <TableCell className="text-muted-foreground">{record.notes || '—'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

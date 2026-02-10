@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,13 +6,62 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Building2, Bell, Shield, Palette } from 'lucide-react';
+import { Building2, Bell, Shield, Sparkles, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+const accentColors = [
+  { name: 'Blue', value: '210 70% 45%', darkValue: '210 65% 55%', preview: 'bg-blue-500' },
+  { name: 'Violet', value: '262 70% 50%', darkValue: '262 65% 60%', preview: 'bg-violet-500' },
+  { name: 'Emerald', value: '160 70% 40%', darkValue: '160 65% 50%', preview: 'bg-emerald-500' },
+  { name: 'Rose', value: '350 70% 50%', darkValue: '350 65% 55%', preview: 'bg-rose-500' },
+  { name: 'Amber', value: '38 90% 50%', darkValue: '38 85% 55%', preview: 'bg-amber-500' },
+];
 
 export default function Settings() {
+  const { toast } = useToast();
+  const [hospitalName, setHospitalName] = useState('MedCare General Hospital');
+  const [address, setAddress] = useState('123 Healthcare Boulevard, Springfield');
+  const [phone, setPhone] = useState('+1 (555) 000-0000');
+  const [email, setEmail] = useState('info@medcare.com');
+  const [selectedAccent, setSelectedAccent] = useState(0);
+  const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('splashDisabled') !== 'true');
+  const [animationSpeed, setAnimationSpeed] = useState<'normal' | 'fast' | 'off'>(() => (localStorage.getItem('animationSpeed') as any) || 'normal');
+
+  const handleSaveHospitalInfo = () => {
+    toast({ title: 'Settings saved', description: 'Hospital information has been updated.' });
+  };
+
+  const handleAccentChange = (index: number) => {
+    setSelectedAccent(index);
+    const color = accentColors[index];
+    document.documentElement.style.setProperty('--primary', color.value);
+    document.documentElement.style.setProperty('--ring', color.value);
+    document.documentElement.style.setProperty('--sidebar-primary', color.value);
+    localStorage.setItem('accentColor', String(index));
+  };
+
+  const handleSplashToggle = (enabled: boolean) => {
+    setSplashEnabled(enabled);
+    localStorage.setItem('splashDisabled', String(!enabled));
+  };
+
+  const handleAnimationSpeed = (speed: 'normal' | 'fast' | 'off') => {
+    setAnimationSpeed(speed);
+    localStorage.setItem('animationSpeed', speed);
+    if (speed === 'off') {
+      document.documentElement.style.setProperty('--animation-duration', '0s');
+    } else if (speed === 'fast') {
+      document.documentElement.style.setProperty('--animation-duration', '0.1s');
+    } else {
+      document.documentElement.style.removeProperty('--animation-duration');
+    }
+  };
+
   const settingsCards = [
     {
       title: 'Hospital Information',
@@ -21,24 +71,24 @@ export default function Settings() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="hospitalName">Hospital Name</Label>
-            <Input id="hospitalName" defaultValue="MedCare General Hospital" className="bg-background/50 border-border/50" />
+            <Input id="hospitalName" value={hospitalName} onChange={e => setHospitalName(e.target.value)} className="bg-background/50 border-border/50" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
-            <Input id="address" defaultValue="123 Healthcare Boulevard, Springfield" className="bg-background/50 border-border/50" />
+            <Input id="address" value={address} onChange={e => setAddress(e.target.value)} className="bg-background/50 border-border/50" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" defaultValue="+1 (555) 000-0000" className="bg-background/50 border-border/50" />
+              <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} className="bg-background/50 border-border/50" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" defaultValue="info@medcare.com" className="bg-background/50 border-border/50" />
+              <Input id="email" value={email} onChange={e => setEmail(e.target.value)} className="bg-background/50 border-border/50" />
             </div>
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button>Save Changes</Button>
+            <Button onClick={handleSaveHospitalInfo}>Save Changes</Button>
           </motion.div>
         </div>
       ),
@@ -108,33 +158,67 @@ export default function Settings() {
       ),
     },
     {
-      title: 'Appearance',
-      description: 'Customize the look and feel',
-      icon: Palette,
+      title: 'Preferences',
+      description: 'Customize animations, splash screen, and accent color',
+      icon: Sparkles,
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
+          {/* Splash Screen */}
           <div className="flex items-center justify-between p-3 rounded-xl hover:bg-accent/30 transition-colors">
             <div>
-              <p className="font-medium">Dark Mode</p>
-              <p className="text-sm text-muted-foreground">Switch to dark theme</p>
+              <p className="font-medium">Splash Screen</p>
+              <p className="text-sm text-muted-foreground">Show animated intro on load</p>
             </div>
-            <Switch />
+            <Switch checked={splashEnabled} onCheckedChange={handleSplashToggle} />
           </div>
           <Separator className="bg-border/50" />
-          <div className="flex items-center justify-between p-3 rounded-xl hover:bg-accent/30 transition-colors">
+
+          {/* Animation Speed */}
+          <div className="space-y-3 p-3">
             <div>
-              <p className="font-medium">Compact View</p>
-              <p className="text-sm text-muted-foreground">Reduce spacing in tables</p>
+              <p className="font-medium">Animation Speed</p>
+              <p className="text-sm text-muted-foreground">Control UI animation speed</p>
             </div>
-            <Switch />
+            <div className="flex gap-2">
+              {(['normal', 'fast', 'off'] as const).map(speed => (
+                <Button
+                  key={speed}
+                  variant={animationSpeed === speed ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleAnimationSpeed(speed)}
+                  className="capitalize"
+                >
+                  {speed}
+                </Button>
+              ))}
+            </div>
           </div>
           <Separator className="bg-border/50" />
-          <div className="flex items-center justify-between p-3 rounded-xl hover:bg-accent/30 transition-colors">
+
+          {/* Accent Color */}
+          <div className="space-y-3 p-3">
             <div>
-              <p className="font-medium">Animations</p>
-              <p className="text-sm text-muted-foreground">Enable UI animations</p>
+              <p className="font-medium">Accent Color</p>
+              <p className="text-sm text-muted-foreground">Choose a primary color theme</p>
             </div>
-            <Switch defaultChecked />
+            <div className="flex gap-3">
+              {accentColors.map((color, i) => (
+                <button
+                  key={color.name}
+                  onClick={() => handleAccentChange(i)}
+                  className={cn(
+                    'relative h-8 w-8 rounded-full transition-all',
+                    color.preview,
+                    selectedAccent === i && 'ring-2 ring-offset-2 ring-offset-background ring-foreground'
+                  )}
+                  title={color.name}
+                >
+                  {selectedAccent === i && (
+                    <Check className="h-4 w-4 text-white absolute inset-0 m-auto" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       ),
@@ -204,21 +288,6 @@ export default function Settings() {
             );
           })}
         </div>
-
-        {/* Demo Notice */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Spotlight>
-            <Card className="border-0 bg-transparent shadow-none border-dashed">
-              <CardContent className="flex items-center justify-center py-6 text-center text-muted-foreground">
-                <p>This is a demo application. Settings changes will not persist.</p>
-              </CardContent>
-            </Card>
-          </Spotlight>
-        </motion.div>
       </div>
     </Layout>
   );

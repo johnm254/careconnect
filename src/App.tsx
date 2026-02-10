@@ -60,7 +60,7 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => localStorage.getItem('splashDisabled') !== 'true');
 
   return (
     <QueryClientProvider client={queryClient}>
