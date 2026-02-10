@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
+import { useLoading } from '@/hooks/use-loading';
+import { TableSkeleton, CardSkeleton } from '@/components/ui/skeleton-shimmer';
 
 const statusColors = {
   pending: 'bg-amber-500/20 text-amber-600 border border-amber-500/30',
@@ -31,6 +33,7 @@ export default function Appointments() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [filterDoctor, setFilterDoctor] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const isLoading = useLoading(800);
 
   const doctors = mockStaff.filter((s) => s.role === 'doctor');
 
@@ -41,6 +44,24 @@ export default function Appointments() {
   });
 
   const canManageAppointments = currentRole === 'admin' || currentRole === 'receptionist';
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+            <div className="h-4 w-64 rounded-lg bg-muted animate-pulse" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          <TableSkeleton rows={6} />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
