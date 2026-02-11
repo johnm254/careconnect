@@ -16,6 +16,7 @@ import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
 import { useLoading } from '@/hooks/use-loading';
 import { PatientCardSkeleton } from '@/components/ui/skeleton-shimmer';
 import { useDebounce } from '@/hooks/use-debounce';
+import { usePagination, PaginationControls } from '@/components/ui/pagination-controls';
 
 const departments = ['All', 'Cardiology', 'Pediatrics', 'General Medicine', 'Orthopedics'];
 
@@ -35,6 +36,7 @@ export default function StaffDirectory() {
     return searchMatch && deptMatch && roleMatch;
   });
 
+  const { paginatedItems: paginatedStaff, currentPage, totalPages, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(filteredStaff);
   if (isLoading) {
     return (
       <Layout>
@@ -121,7 +123,7 @@ export default function StaffDirectory() {
 
         {/* Staff Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredStaff.map((staff, index) => (
+          {paginatedStaff.map((staff, index) => (
             <motion.div
               key={staff.id}
               initial={{ opacity: 0, y: 20 }}
@@ -269,6 +271,14 @@ export default function StaffDirectory() {
           ))}
         </div>
 
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
         {filteredStaff.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}

@@ -17,6 +17,7 @@ import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { useLoading } from '@/hooks/use-loading';
 import { TableSkeleton, SkeletonShimmer } from '@/components/ui/skeleton-shimmer';
 import { useDebounce } from '@/hooks/use-debounce';
+import { usePagination, PaginationControls } from '@/components/ui/pagination-controls';
 
 export default function Patients() {
   const { currentRole } = useRole();
@@ -34,7 +35,7 @@ export default function Patients() {
   );
 
   const canAddPatient = currentRole === 'admin' || currentRole === 'receptionist';
-
+  const { paginatedItems: paginatedPatients, currentPage, totalPages, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(filteredPatients);
   if (isLoading) {
     return (
       <Layout>
@@ -217,7 +218,7 @@ export default function Patients() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredPatients.map((patient, index) => (
+                    {paginatedPatients.map((patient, index) => (
                       <motion.tr
                         key={patient.id}
                         className="border-border/50 hover:bg-accent/30 transition-colors"
@@ -311,6 +312,14 @@ export default function Patients() {
                     ))}
                   </TableBody>
                 </Table>
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                />
               </CardContent>
             </Card>
           </Spotlight>
