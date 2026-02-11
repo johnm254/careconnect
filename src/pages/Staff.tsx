@@ -15,19 +15,21 @@ import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
 import { useLoading } from '@/hooks/use-loading';
 import { PatientCardSkeleton } from '@/components/ui/skeleton-shimmer';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const departments = ['All', 'Cardiology', 'Pediatrics', 'General Medicine', 'Orthopedics'];
 
 export default function StaffDirectory() {
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [filterDepartment, setFilterDepartment] = useState('All');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const isLoading = useLoading(800);
 
   const filteredStaff = mockStaff.filter((staff) => {
-    const searchMatch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       staff.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchMatch = staff.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                       staff.department.toLowerCase().includes(debouncedSearch.toLowerCase());
     const deptMatch = filterDepartment === 'All' || staff.department === filterDepartment;
     const roleMatch = filterRole === 'all' || staff.role === filterRole;
     return searchMatch && deptMatch && roleMatch;

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/contexts/RoleContext';
@@ -14,6 +14,8 @@ import {
   ChevronDown,
   Stethoscope,
   Briefcase,
+  Menu,
+  X,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -22,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserRole } from '@/types/hospital';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcut';
@@ -48,6 +50,7 @@ const roleColors: Record<UserRole, string> = {
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { currentRole, setCurrentRole, setIsLoggedIn } = useRole();
+  const [mobileOpen, setMobileOpen] = useState(false);
   useKeyboardShortcuts();
 
   const navItems = [
@@ -66,148 +69,175 @@ export function Layout({ children }: LayoutProps) {
     setIsLoggedIn(false);
   };
 
+  const sidebarContent = (
+    <div className="relative flex h-full flex-col overflow-hidden">
+      <FloatingParticles quantity={15} className="opacity-30" />
+      
+      {/* Logo */}
+      <div className="relative z-10 flex h-16 items-center justify-between border-b border-border/50 px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm">
+            <Stethoscope className="h-5 w-5 text-primary" />
+          </div>
+          <span className="text-lg font-bold">MedCare HMS</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden h-8 w-8"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Role Selector */}
+      <div className="relative z-10 border-b border-border/50 p-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full justify-between border-border/50 bg-background/50 backdrop-blur-sm hover:bg-accent/50"
+            >
+              <span className={cn('rounded-lg px-2.5 py-1 text-xs font-semibold', roleColors[currentRole])}>
+                {roleLabels[currentRole]}
+              </span>
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 bg-popover/95 backdrop-blur-xl border-border/50" align="start">
+            {(Object.keys(roleLabels) as UserRole[]).map((role) => (
+              <DropdownMenuItem
+                key={role}
+                onClick={() => setCurrentRole(role)}
+                className={cn(
+                  'cursor-pointer transition-colors',
+                  currentRole === role && 'bg-accent'
+                )}
+              >
+                <span className={cn('rounded-lg px-2.5 py-1 text-xs font-semibold', roleColors[role])}>
+                  {roleLabels[role]}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Navigation */}
+      <nav className="relative z-10 flex-1 space-y-1 p-4 overflow-y-auto">
+        {filteredNavItems.map((item, index) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <motion.div
+              key={item.path}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 + index * 0.05 }}
+            >
+              <Link
+                to={item.path}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all',
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    className="absolute inset-0 rounded-xl bg-primary"
+                    layoutId="activeNav"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-3">
+                  <Icon className="h-5 w-5" />
+                  {item.label}
+                </span>
+              </Link>
+            </motion.div>
+          );
+        })}
+      </nav>
+
+      {/* Logout */}
+      <div className="relative z-10 border-t border-border/50 p-4">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-5 w-5" />
+          Sign Out
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
+      {/* Mobile Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-xl px-4 md:hidden">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMobileOpen(true)}>
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Stethoscope className="h-5 w-5 text-primary" />
+            <span className="font-bold">MedCare</span>
+          </div>
+        </div>
+        <ThemeToggle />
+      </div>
+
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              className="fixed left-0 top-0 z-50 h-screen w-72 bg-card/95 backdrop-blur-xl border-r border-border/50 md:hidden"
+              initial={{ x: -288 }}
+              animate={{ x: 0 }}
+              exit={{ x: -288 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
       <motion.aside 
-        className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/50 bg-card/80 backdrop-blur-xl"
+        className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/50 bg-card/80 backdrop-blur-xl hidden md:block"
         initial={{ x: -64, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <div className="relative flex h-full flex-col overflow-hidden">
-          <FloatingParticles quantity={15} className="opacity-30" />
-          
-          {/* Logo */}
-          <motion.div 
-            className="relative z-10 flex h-16 items-center justify-between border-b border-border/50 px-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-3">
-              <motion.div 
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Stethoscope className="h-5 w-5 text-primary" />
-              </motion.div>
-              <span className="text-lg font-bold">MedCare HMS</span>
-            </div>
-            <ThemeToggle />
-          </motion.div>
-
-          {/* Role Selector */}
-          <motion.div 
-            className="relative z-10 border-b border-border/50 p-4"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-between border-border/50 bg-background/50 backdrop-blur-sm hover:bg-accent/50"
-                >
-                  <span className={cn('rounded-lg px-2.5 py-1 text-xs font-semibold', roleColors[currentRole])}>
-                    {roleLabels[currentRole]}
-                  </span>
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-popover/95 backdrop-blur-xl border-border/50" align="start">
-                {(Object.keys(roleLabels) as UserRole[]).map((role) => (
-                  <DropdownMenuItem
-                    key={role}
-                    onClick={() => setCurrentRole(role)}
-                    className={cn(
-                      'cursor-pointer transition-colors',
-                      currentRole === role && 'bg-accent'
-                    )}
-                  >
-                    <span className={cn('rounded-lg px-2.5 py-1 text-xs font-semibold', roleColors[role])}>
-                      {roleLabels[role]}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </motion.div>
-
-          {/* Navigation */}
-          <nav className="relative z-10 flex-1 space-y-1 p-4">
-            {filteredNavItems.map((item, index) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <motion.div
-                  key={item.path}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + index * 0.05 }}
-                >
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all',
-                      isActive
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
-                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                    )}
-                  >
-                    {isActive && (
-                      <motion.div
-                        className="absolute inset-0 rounded-xl bg-primary"
-                        layoutId="activeNav"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10 flex items-center gap-3">
-                      <motion.span
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </motion.span>
-                      {item.label}
-                    </span>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </nav>
-
-          {/* Logout */}
-          <motion.div 
-            className="relative z-10 border-t border-border/50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-          >
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5" />
-                Sign Out
-              </Button>
-            </motion.div>
-          </motion.div>
-        </div>
+        {sidebarContent}
       </motion.aside>
 
       {/* Main Content */}
       <motion.main 
-        className="ml-64 flex-1"
+        className="flex-1 md:ml-64 mt-14 md:mt-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <div className="p-8">{children}</div>
+        <div className="p-4 md:p-8">{children}</div>
       </motion.main>
     </div>
   );

@@ -12,13 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { mockAppointments, mockPatients, mockStaff } from '@/data/mockData';
 import { useRole } from '@/contexts/RoleContext';
-import { CalendarPlus, Clock, User, Stethoscope } from 'lucide-react';
+import { CalendarPlus, Clock, User, Stethoscope, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { useLoading } from '@/hooks/use-loading';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/skeleton-shimmer';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const statusColors = {
   pending: 'bg-amber-500/20 text-amber-600 border border-amber-500/30',
@@ -33,6 +34,8 @@ export default function Appointments() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [filterDoctor, setFilterDoctor] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const isLoading = useLoading(800);
 
   const doctors = mockStaff.filter((s) => s.role === 'doctor');
@@ -40,7 +43,11 @@ export default function Appointments() {
   const filteredAppointments = mockAppointments.filter((apt) => {
     const doctorMatch = filterDoctor === 'all' || apt.doctorId === filterDoctor;
     const statusMatch = filterStatus === 'all' || apt.status === filterStatus;
-    return doctorMatch && statusMatch;
+    const searchMatch = !debouncedSearch || 
+      apt.patientName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      apt.doctorName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      apt.reason.toLowerCase().includes(debouncedSearch.toLowerCase());
+    return doctorMatch && statusMatch && searchMatch;
   });
 
   const canManageAppointments = currentRole === 'admin' || currentRole === 'receptionist';
@@ -174,7 +181,16 @@ export default function Appointments() {
               {/* Filters */}
               <Spotlight>
                 <Card className="border-0 bg-transparent shadow-none">
-                  <CardContent className="flex gap-4 p-4">
+                  <CardContent className="flex flex-wrap gap-4 p-4">
+                    <div className="relative flex-1 min-w-[200px]">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search patients, doctors, reasons..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-background/50 border-border/50"
+                      />
+                    </div>
                     <div className="w-48">
                       <Select value={filterDoctor} onValueChange={setFilterDoctor}>
                         <SelectTrigger className="bg-background/50 border-border/50">
