@@ -16,19 +16,21 @@ import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { useLoading } from '@/hooks/use-loading';
 import { TableSkeleton, SkeletonShimmer } from '@/components/ui/skeleton-shimmer';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export default function Patients() {
   const { currentRole } = useRole();
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const isLoading = useLoading(600);
 
   const filteredPatients = mockPatients.filter(
     (patient) =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.phone.includes(searchTerm)
+      patient.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      patient.id.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      patient.phone.includes(debouncedSearch)
   );
 
   const canAddPatient = currentRole === 'admin' || currentRole === 'receptionist';
