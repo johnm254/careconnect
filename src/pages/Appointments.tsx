@@ -20,6 +20,7 @@ import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { useLoading } from '@/hooks/use-loading';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/skeleton-shimmer';
 import { useDebounce } from '@/hooks/use-debounce';
+import { usePagination, PaginationControls } from '@/components/ui/pagination-controls';
 
 const statusColors = {
   pending: 'bg-amber-500/20 text-amber-600 border border-amber-500/30',
@@ -51,6 +52,7 @@ export default function Appointments() {
   });
 
   const canManageAppointments = currentRole === 'admin' || currentRole === 'receptionist';
+  const { paginatedItems: paginatedAppointments, currentPage, totalPages, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(filteredAppointments);
 
   if (isLoading) {
     return (
@@ -242,7 +244,7 @@ export default function Appointments() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredAppointments.map((apt, index) => (
+                        {paginatedAppointments.map((apt, index) => (
                           <motion.tr
                             key={apt.id}
                             className="border-border/50 hover:bg-accent/30 transition-colors"
@@ -294,6 +296,14 @@ export default function Appointments() {
                         ))}
                       </TableBody>
                     </Table>
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      pageSize={pageSize}
+                      totalItems={totalItems}
+                      onPageChange={setCurrentPage}
+                      onPageSizeChange={setPageSize}
+                    />
                   </CardContent>
                 </Card>
               </Spotlight>

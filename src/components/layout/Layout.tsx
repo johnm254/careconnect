@@ -1,4 +1,5 @@
 import { ReactNode, useState } from 'react';
+import { NotificationBell } from '@/components/NotificationBell';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/contexts/RoleContext';
@@ -82,6 +83,7 @@ export function Layout({ children }: LayoutProps) {
           <span className="text-lg font-bold">MedCare HMS</span>
         </div>
         <div className="flex items-center gap-1">
+          <NotificationBell />
           <ThemeToggle />
           <Button
             variant="ghost"
@@ -193,7 +195,10 @@ export function Layout({ children }: LayoutProps) {
             <span className="font-bold">MedCare</span>
           </div>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Mobile Overlay */}
