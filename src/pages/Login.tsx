@@ -1,58 +1,50 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRole } from '@/contexts/RoleContext';
-import { UserRole } from '@/types/hospital';
+import { useAuth } from '@/contexts/AuthContext';
+import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Stethoscope, Shield, UserCog, Heart, ClipboardList } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Logo } from '@/components/Logo';
 import { motion } from 'framer-motion';
 import { BackgroundBeams } from '@/components/ui/background-beams';
 import { Spotlight } from '@/components/ui/spotlight';
 import { GradientOrb } from '@/components/ui/animated-gradient';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { FloatingParticles } from '@/components/ui/floating-particles';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-
-const roles: { role: UserRole; label: string; description: string; icon: typeof Shield }[] = [
-  { role: 'admin', label: 'Administrator', description: 'Full system access', icon: Shield },
-  { role: 'doctor', label: 'Doctor', description: 'Patient care & records', icon: Heart },
-  { role: 'nurse', label: 'Nurse', description: 'Patient assistance', icon: UserCog },
-  { role: 'receptionist', label: 'Receptionist', description: 'Scheduling & billing', icon: ClipboardList },
-];
+import { toast } from '@/hooks/use-toast';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setCurrentRole, setIsLoggedIn } = useRole();
-  const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
+  const { loginStaff } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentRole(selectedRole);
-    setIsLoggedIn(true);
-    navigate('/dashboard');
+    setIsSubmitting(true);
+    try {
+      await loginStaff(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      toast({
+        title: 'Login failed',
+        description: err instanceof ApiError ? err.message : 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-background">
-      {/* Theme Toggle - Fixed Top Right */}
-      <motion.div
-        className="fixed right-4 top-4 z-50"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <ThemeToggle />
-      </motion.div>
-
       {/* Background Effects */}
       <div className="absolute inset-0">
         <GradientOrb className="left-1/4 top-1/4" />
-        <GradientOrb className="right-1/4 bottom-1/4 bg-primary/10" />
+        <GradientOrb className="right-1/4 bottom-1/4 bg-brand/10" />
       </div>
       <FloatingParticles className="z-0" quantity={30} />
       
@@ -66,61 +58,59 @@ export default function Login() {
           transition={{ duration: 0.6 }}
           className="relative z-10 flex items-center gap-3"
         >
-          <motion.div 
-            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/20 backdrop-blur-sm border border-primary/30"
+          <motion.div
             whileHover={{ scale: 1.05, rotate: 5 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <Stethoscope className="h-8 w-8 text-primary" />
+            <Logo className="h-14 w-14" />
           </motion.div>
-          <span className="text-2xl font-bold text-foreground">MedCare HMS</span>
+          <span className="text-2xl font-bold text-foreground">La-tullah Medical Centre</span>
         </motion.div>
         
         <div className="relative z-10">
           <TextReveal delay={0.2}>
             <h1 className="text-5xl font-bold leading-tight text-foreground">
-              Hospital Management
+              Staff Portal
               <br />
-              <GradientText>Made Simple</GradientText>
+              <GradientText>La-tullah Medical Centre</GradientText>
             </h1>
           </TextReveal>
           <TextReveal delay={0.4}>
             <p className="mt-6 text-lg text-muted-foreground max-w-md">
-              Streamline patient care, appointments, and billing with our modern healthcare management system.
+              Manage patients, appointments, and hospital operations along Mikindani Main Road, Mombasa.
             </p>
           </TextReveal>
-          
-          <motion.div 
+
+          <motion.div
             className="mt-8 flex gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
           >
             {[
-              { label: '10k+', desc: 'Patients Served' },
-              { label: '500+', desc: 'Doctors' },
-              { label: '99.9%', desc: 'Uptime' },
+              { label: 'Mombasa', desc: 'Mikindani, Kenya' },
+              { label: '0722 872147', desc: 'Reception Line' },
             ].map((stat, i) => (
               <Spotlight key={i} className="p-4">
-                <p className="text-2xl font-bold text-primary">{stat.label}</p>
+                <p className="text-lg font-bold text-brand">{stat.label}</p>
                 <p className="text-sm text-muted-foreground">{stat.desc}</p>
               </Spotlight>
             ))}
           </motion.div>
         </div>
-        
-        <motion.p 
+
+        <motion.p
           className="relative z-10 text-sm text-muted-foreground"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          © 2025 MedCare HMS. All rights reserved.
+          © 2026 La-tullah Medical Centre. All rights reserved.
         </motion.p>
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="relative z-10 flex w-full items-center justify-center p-8 lg:w-1/2">
+      <div className="relative z-10 flex w-full items-center justify-center p-4 sm:p-8 lg:w-1/2">
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -135,53 +125,13 @@ export default function Login() {
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/20 backdrop-blur-sm border border-primary/30">
-                  <Stethoscope className="h-8 w-8 text-primary" />
-                </div>
+                <Logo className="h-14 w-14" />
               </motion.div>
               <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-              <CardDescription>Select your role and sign in to continue</CardDescription>
+              <CardDescription>Sign in with your staff account to continue</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-6">
-                {/* Role Selection */}
-                <div className="space-y-3">
-                  <Label>Select Role</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {roles.map(({ role, label, description, icon: Icon }, index) => (
-                      <motion.button
-                        key={role}
-                        type="button"
-                        onClick={() => setSelectedRole(role)}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 * index, duration: 0.3 }}
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={cn(
-                          'relative flex flex-col items-start gap-1 rounded-xl border-2 p-4 text-left transition-all overflow-hidden',
-                          selectedRole === role
-                            ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
-                            : 'border-border/50 hover:border-primary/50 hover:bg-accent/50'
-                        )}
-                      >
-                        {selectedRole === role && (
-                          <motion.div 
-                            className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"
-                            layoutId="selectedRole"
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                          />
-                        )}
-                        <div className="relative z-10 flex items-center gap-2">
-                          <Icon className={cn('h-5 w-5', selectedRole === role ? 'text-primary' : 'text-muted-foreground')} />
-                          <span className={cn('text-sm font-semibold', selectedRole === role && 'text-primary')}>{label}</span>
-                        </div>
-                        <span className="relative z-10 text-xs text-muted-foreground">{description}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Email */}
                 <motion.div 
                   className="space-y-2"
@@ -196,7 +146,7 @@ export default function Login() {
                     placeholder="name@hospital.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50"
+                    className="bg-background/50 backdrop-blur-sm border-border/50 focus:border-brand/50"
                   />
                 </motion.div>
 
@@ -214,34 +164,25 @@ export default function Login() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50"
+                    className="bg-background/50 backdrop-blur-sm border-border/50 focus:border-brand/50"
                   />
                 </motion.div>
-
-                {/* Demo Notice */}
-                <motion.p 
-                  className="text-center text-xs text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                >
-                  This is a demo. Enter any credentials to continue.
-                </motion.p>
 
                 {/* Submit */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
+                  transition={{ delay: 0.7 }}
                 >
-                  <Button 
-                    type="submit" 
-                    className="w-full relative overflow-hidden group" 
+                  <Button
+                    type="submit"
+                    className="w-full relative overflow-hidden group"
                     size="lg"
+                    disabled={isSubmitting}
                   >
-                    <span className="relative z-10">Sign In</span>
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary-foreground/20 to-primary/0"
+                    <span className="relative z-10">{isSubmitting ? 'Signing in…' : 'Sign In'}</span>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-brand/0 via-primary-foreground/20 to-brand/0"
                       initial={{ x: "-100%" }}
                       whileHover={{ x: "100%" }}
                       transition={{ duration: 0.5 }}
@@ -266,7 +207,7 @@ export default function Login() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full border-border/50 hover:border-primary/50 hover:bg-primary/5"
+                    className="w-full border-border/50 hover:border-brand/50 hover:bg-brand/5"
                     size="lg"
                     onClick={() => navigate('/book-consultation')}
                   >

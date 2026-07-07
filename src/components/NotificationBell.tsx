@@ -21,10 +21,10 @@ interface Notification {
 }
 
 const initialNotifications: Notification[] = [
-  { id: '1', title: 'Emergency Alert', message: 'ICU bed 3 requires immediate attention', time: '2 min ago', read: false, type: 'alert' },
-  { id: '2', title: 'New Patient', message: 'Sarah Johnson registered via online portal', time: '15 min ago', read: false, type: 'patient' },
-  { id: '3', title: 'Appointment Confirmed', message: 'Dr. Smith confirmed 3:00 PM slot', time: '30 min ago', read: false, type: 'appointment' },
-  { id: '4', title: 'Payment Received', message: 'Invoice #INV-2024-089 paid — $1,250', time: '1 hr ago', read: true, type: 'billing' },
+  { id: '1', title: 'Low Stock Alert', message: 'Paracetamol 500mg is below reorder level', time: '2 min ago', read: false, type: 'alert' },
+  { id: '2', title: 'New Patient', message: 'Sarah Johnson registered at reception', time: '15 min ago', read: false, type: 'patient' },
+  { id: '3', title: 'Appointment Confirmed', message: 'Dr. Smith confirmed the 3:00 PM slot', time: '30 min ago', read: false, type: 'appointment' },
+  { id: '4', title: 'Payment Received', message: 'Invoice #LTM-INV-2026-00089 paid, $1,250', time: '1 hr ago', read: true, type: 'billing' },
   { id: '5', title: 'Staff Update', message: 'Dr. Patel is now available for consults', time: '2 hr ago', read: true, type: 'patient' },
 ];
 
@@ -37,7 +37,7 @@ const typeIcons = {
 
 const typeColors = {
   alert: 'text-destructive',
-  patient: 'text-primary',
+  patient: 'text-brand',
   appointment: 'text-emerald-500',
   billing: 'text-amber-500',
 };
@@ -59,7 +59,7 @@ export function NotificationBell() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9">
+        <Button variant="ghost" size="icon" className="relative h-10 w-10">
           <Bell className="h-5 w-5" />
           <AnimatePresence>
             {unreadCount > 0 && (
@@ -77,7 +77,7 @@ export function NotificationBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-80 bg-popover/95 backdrop-blur-xl border-border/50 p-0"
+        className="w-80 max-w-[calc(100vw-2rem)] bg-popover/95 backdrop-blur-xl border-border/50 p-0"
       >
         <div className="flex items-center justify-between border-b border-border/50 p-3">
           <span className="text-sm font-semibold">Notifications</span>
@@ -85,7 +85,7 @@ export function NotificationBell() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto px-2 py-1 text-xs text-primary hover:text-primary"
+              className="h-auto px-2 py-1 text-xs text-brand hover:text-brand"
               onClick={markAllRead}
             >
               Mark all read
@@ -111,7 +111,7 @@ export function NotificationBell() {
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium leading-none">{notification.title}</p>
                     {!notification.read && (
-                      <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                      <span className="h-2 w-2 rounded-full bg-brand shrink-0" />
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground leading-snug">{notification.message}</p>

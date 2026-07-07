@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { mockStaff } from '@/data/mockData';
+import { usePublicDepartments, usePublicDoctors } from '@/hooks/api/usePublic';
 import { toast } from '@/hooks/use-toast';
 import { CalendarIcon, Stethoscope, User, Phone, Mail, Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BackgroundBeams } from '@/components/ui/background-beams';
@@ -21,41 +20,60 @@ import { FloatingParticles } from '@/components/ui/floating-particles';
 import { Spotlight } from '@/components/ui/spotlight';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
+import { usePersistedState } from '@/hooks/use-persisted-state';
 
 const timeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
   '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
 ];
 
-const departments = ['Cardiology', 'Pediatrics', 'General Medicine', 'Orthopedics'];
+const EMPTY_FORM = {
+  name: '',
+  phone: '',
+  email: '',
+  departmentId: '',
+  doctorId: '',
+  date: '',
+  time: '',
+  reason: '',
+};
+
+const parseLocalDate = (value: string) => {
+  const [y, m, d] = value.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
 
 export default function BookConsultation() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = usePersistedState('ltm-consultation-step', 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [bookingRef, setBookingRef] = useState('');
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    department: '',
-    doctorId: '',
-    date: undefined as Date | undefined,
-    time: '',
-    reason: '',
-  });
 
-  const doctors = mockStaff.filter(
-    (s) => s.role === 'doctor' && (formData.department === '' || s.department === formData.department)
+  const { data: departments } = usePublicDepartments();
+  const { data: allDoctors } = usePublicDoctors();
+
+  const [formData, setFormData, clearFormData] = usePersistedState('ltm-consultation-form', EMPTY_FORM);
+
+  const availableDoctors = (allDoctors ?? []).filter(
+    (d) => formData.departmentId === '' || String(d.department_id) === formData.departmentId
   );
 
-  const availableDoctors = doctors.filter((d) => d.available);
-
-  const updateFormData = (field: string, value: string | Date | undefined) => {
+  const updateFormData = (field: keyof typeof EMPTY_FORM, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  const startOver = () => {
+    clearFormData();
+    setStep(1);
+  };
+
+  useEffect(() => {
+    if (formData.name || formData.phone) {
+      toast({ title: 'Welcome back', description: "We've restored your in-progress booking." });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const validateStep1 = () => {
     if (!formData.name.trim() || !formData.phone.trim()) {
@@ -70,7 +88,7 @@ export default function BookConsultation() {
   };
 
   const validateStep2 = () => {
-    if (!formData.department || !formData.doctorId) {
+    if (!formData.departmentId || !formData.doctorId) {
       toast({
         title: 'Missing Information',
         description: 'Please select a department and doctor.',
@@ -99,50 +117,48 @@ export default function BookConsultation() {
     else if (step === 3 && validateStep3()) handleSubmit();
   };
 
-  const sendConfirmationEmail = useCallback(async (ref: string, doctor: typeof mockStaff[0] | undefined) => {
-    if (!formData.email) return;
-
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-booking-confirmation', {
-        body: {
+      const res = await fetch('/api/public/book-consultation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           patientName: formData.name,
-          patientEmail: formData.email,
+          patientEmail: formData.email || undefined,
           patientPhone: formData.phone,
-          doctorName: doctor?.name || '',
-          department: formData.department,
-          date: formData.date ? format(formData.date, 'PPP') : '',
+          doctorId: Number(formData.doctorId),
+          departmentId: Number(formData.departmentId),
+          date: formData.date,
           time: formData.time,
-          bookingRef: ref,
           reason: formData.reason,
-        },
+        }),
       });
 
-      if (error) {
-        console.error('Error sending confirmation:', error);
-      } else {
-        console.log('Confirmation sent:', data);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}) as { error?: string });
+        throw new Error(body.error ?? 'Failed to book consultation');
       }
-    } catch (err) {
-      console.error('Failed to send confirmation:', err);
-    }
-  }, [formData]);
 
-  const handleSubmit = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      const ref = `CNS-${Date.now().toString().slice(-6)}`;
-      setBookingRef(ref);
+      const data = (await res.json()) as { patientNumber: string };
+      setBookingRef(data.patientNumber);
       setBookingComplete(true);
-      sendConfirmationEmail(ref, selectedDoctor);
-      setIsSubmitting(false);
       toast({
         title: 'Booking Confirmed!',
-        description: `Your consultation has been booked. Reference: ${ref}`,
+        description: `Your consultation has been booked. Patient ID: ${data.patientNumber}`,
       });
-    }, 1500);
+    } catch (err) {
+      toast({
+        title: 'Booking failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const selectedDoctor = mockStaff.find((d) => d.id === formData.doctorId);
+  const selectedDoctor = availableDoctors.find((d) => String(d.id) === formData.doctorId);
 
   if (bookingComplete) {
     return (
@@ -186,16 +202,16 @@ export default function BookConsultation() {
                   <CardItem translateZ={40} className="w-full">
                     <Spotlight className="rounded-lg p-4 space-y-2 text-left">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Reference:</span>
-                        <span className="font-semibold text-primary">{bookingRef}</span>
+                        <span className="text-muted-foreground">Patient ID:</span>
+                        <span className="font-semibold text-brand">{bookingRef}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Doctor:</span>
-                        <span className="font-medium">{selectedDoctor?.name}</span>
+                        <span className="font-medium">{selectedDoctor?.full_name}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Date:</span>
-                        <span className="font-medium">{formData.date && format(formData.date, 'PPP')}</span>
+                        <span className="font-medium">{formData.date && format(parseLocalDate(formData.date), 'PPP')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Time:</span>
@@ -206,7 +222,7 @@ export default function BookConsultation() {
                   
                   {formData.email && (
                     <motion.p 
-                      className="text-sm text-primary flex items-center justify-center gap-2"
+                      className="text-sm text-brand flex items-center justify-center gap-2"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.5 }}
@@ -217,11 +233,12 @@ export default function BookConsultation() {
                   )}
                   
                   <p className="text-sm text-muted-foreground">
-                    Please arrive 15 minutes before your appointment time.
+                    Please arrive 15 minutes before your appointment time. Keep your Patient ID for reference,
+                    our reception team will use it to pull up your record when you visit.
                   </p>
-                  
+
                   <CardItem translateZ={30} className="w-full">
-                    <Button className="w-full" onClick={() => navigate('/')}>
+                    <Button className="w-full" onClick={() => { clearFormData(); navigate('/'); }}>
                       Return to Home
                     </Button>
                   </CardItem>
@@ -239,43 +256,58 @@ export default function BookConsultation() {
       <BackgroundBeams className="z-0" />
       <div className="absolute inset-0">
         <GradientOrb className="left-1/4 top-1/4" />
-        <GradientOrb className="right-1/3 bottom-1/3 bg-primary/10" />
+        <GradientOrb className="right-1/3 bottom-1/3 bg-brand/10" />
       </div>
       <FloatingParticles className="z-0" quantity={25} />
       
       <div className="relative z-10 mx-auto max-w-2xl">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button
-              variant="ghost"
-              className="absolute left-4 top-4 backdrop-blur-sm"
-              onClick={() => navigate('/')}
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Login
-            </Button>
-          </motion.div>
-          
-          <motion.div 
-            className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30"
+              <Button
+                variant="ghost"
+                className="backdrop-blur-sm"
+                onClick={() => navigate('/')}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Back</span>
+              </Button>
+            </motion.div>
+
+            {(formData.name || formData.phone || step > 1) && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  className="text-muted-foreground backdrop-blur-sm hover:text-destructive"
+                  onClick={startOver}
+                >
+                  Start Over
+                </Button>
+              </motion.div>
+            )}
+          </div>
+
+          <motion.div
+            className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-brand/20 backdrop-blur-sm border border-brand/30"
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
           >
-            <Stethoscope className="h-10 w-10 text-primary" />
+            <Stethoscope className="h-10 w-10 text-brand" />
           </motion.div>
           
           <TextReveal delay={0.3}>
-            <h1 className="text-4xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Book a <GradientText>Consultation</GradientText>
             </h1>
           </TextReveal>
@@ -297,7 +329,7 @@ export default function BookConsultation() {
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-all border-2',
                   step >= s
-                    ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30'
+                    ? 'bg-primary text-primary-foreground border-brand shadow-lg shadow-brand/30'
                     : 'bg-muted/50 text-muted-foreground border-border/50 backdrop-blur-sm'
                 )}
                 initial={{ scale: 0 }}
@@ -311,7 +343,7 @@ export default function BookConsultation() {
                 <motion.div
                   className={cn(
                     'h-1 w-16 mx-2 rounded-full transition-all',
-                    step > s ? 'bg-primary' : 'bg-border/50'
+                    step > s ? 'bg-brand' : 'bg-border/50'
                   )}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
@@ -408,9 +440,9 @@ export default function BookConsultation() {
                     <div className="space-y-2">
                       <Label>Department *</Label>
                       <Select
-                        value={formData.department}
+                        value={formData.departmentId}
                         onValueChange={(value) => {
-                          updateFormData('department', value);
+                          updateFormData('departmentId', value);
                           updateFormData('doctorId', '');
                         }}
                       >
@@ -418,9 +450,9 @@ export default function BookConsultation() {
                           <SelectValue placeholder="Select a department" />
                         </SelectTrigger>
                         <SelectContent>
-                          {departments.map((dept) => (
-                            <SelectItem key={dept} value={dept}>
-                              {dept}
+                          {(departments ?? []).map((dept) => (
+                            <SelectItem key={dept.id} value={String(dept.id)}>
+                              {dept.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -428,7 +460,7 @@ export default function BookConsultation() {
                     </div>
                     <div className="space-y-2">
                       <Label>Doctor *</Label>
-                      {formData.department && availableDoctors.length === 0 ? (
+                      {formData.departmentId && availableDoctors.length === 0 ? (
                         <p className="text-sm text-muted-foreground py-2">
                           No doctors available in this department. Please select another department.
                         </p>
@@ -444,31 +476,31 @@ export default function BookConsultation() {
                               <Spotlight
                                 className={cn(
                                   'flex items-center gap-4 p-4 cursor-pointer transition-all',
-                                  formData.doctorId === doctor.id
-                                    ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
+                                  formData.doctorId === String(doctor.id)
+                                    ? 'border-brand bg-brand/10 shadow-lg shadow-brand/20'
                                     : 'hover:bg-accent/50'
                                 )}
                               >
-                                <div 
+                                <div
                                   className="flex w-full items-center gap-4"
-                                  onClick={() => updateFormData('doctorId', doctor.id)}
+                                  onClick={() => updateFormData('doctorId', String(doctor.id))}
                                 >
-                                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/20 border border-primary/30">
-                                    <Stethoscope className="h-7 w-7 text-primary" />
+                                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/20 border border-brand/30">
+                                    <Stethoscope className="h-7 w-7 text-brand" />
                                   </div>
                                   <div className="flex-1">
-                                    <p className="font-semibold">{doctor.name}</p>
+                                    <p className="font-semibold">{doctor.full_name}</p>
                                     <p className="text-sm text-muted-foreground">
-                                      {doctor.specialization} • {doctor.schedule}
+                                      {doctor.specialization ?? 'General Practice'}
                                     </p>
                                   </div>
-                                  {formData.doctorId === doctor.id && (
+                                  {formData.doctorId === String(doctor.id) && (
                                     <motion.div
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
                                       transition={{ type: "spring", stiffness: 300 }}
                                     >
-                                      <CheckCircle2 className="h-6 w-6 text-primary" />
+                                      <CheckCircle2 className="h-6 w-6 text-brand" />
                                     </motion.div>
                                   )}
                                 </div>
@@ -503,15 +535,15 @@ export default function BookConsultation() {
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {formData.date ? format(formData.date, 'PPP') : 'Pick a date'}
+                            {formData.date ? format(parseLocalDate(formData.date), 'PPP') : 'Pick a date'}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={formData.date}
-                            onSelect={(date) => updateFormData('date', date)}
-                            disabled={(date) => date < new Date() || date.getDay() === 0}
+                            selected={formData.date ? parseLocalDate(formData.date) : undefined}
+                            onSelect={(date) => updateFormData('date', date ? format(date, 'yyyy-MM-dd') : '')}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0)) || date.getDay() === 0}
                             initialFocus
                             className="pointer-events-auto"
                           />
@@ -520,7 +552,7 @@ export default function BookConsultation() {
                     </div>
                     <div className="space-y-2">
                       <Label>Select Time Slot *</Label>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                         {timeSlots.map((slot, index) => (
                           <motion.div
                             key={slot}
@@ -534,7 +566,7 @@ export default function BookConsultation() {
                               size="sm"
                               className={cn(
                                 'gap-1 w-full',
-                                formData.time === slot && 'shadow-lg shadow-primary/30',
+                                formData.time === slot && 'shadow-lg shadow-brand/30',
                                 formData.time !== slot && 'bg-background/50 backdrop-blur-sm border-border/50'
                               )}
                               onClick={() => updateFormData('time', slot)}
@@ -556,6 +588,19 @@ export default function BookConsultation() {
                         className="bg-background/50 backdrop-blur-sm border-border/50"
                       />
                     </div>
+
+                    {formData.date && formData.time && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                        <Spotlight className="space-y-1.5 rounded-lg p-4 text-sm">
+                          <p className="mb-2 font-semibold">Review Your Booking</p>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Name</span><span className="font-medium">{formData.name}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span className="font-medium">{formData.phone}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Doctor</span><span className="font-medium">{selectedDoctor?.full_name}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-medium">{format(parseLocalDate(formData.date), 'PPP')}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span className="font-medium">{formData.time}</span></div>
+                        </Spotlight>
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -592,7 +637,7 @@ export default function BookConsultation() {
                     </span>
                     {isSubmitting && (
                       <motion.div 
-                        className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary-foreground/30 to-primary/0"
+                        className="absolute inset-0 bg-gradient-to-r from-brand/0 via-primary-foreground/30 to-brand/0"
                         animate={{ x: ["-100%", "100%"] }}
                         transition={{ duration: 1, repeat: Infinity }}
                       />

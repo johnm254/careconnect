@@ -12,22 +12,16 @@ import {
   Receipt,
   Settings,
   LogOut,
-  ChevronDown,
-  Stethoscope,
   Briefcase,
   Menu,
   X,
+  Wallet,
+  Boxes,
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { UserRole } from '@/types/hospital';
+import { Logo } from '@/components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FloatingParticles } from '@/components/ui/floating-particles';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcut';
 
 interface LayoutProps {
@@ -39,6 +33,8 @@ const roleLabels: Record<UserRole, string> = {
   doctor: 'Doctor',
   nurse: 'Nurse',
   receptionist: 'Receptionist',
+  pharmacist: 'Pharmacist',
+  accountant: 'Accountant',
 };
 
 const roleColors: Record<UserRole, string> = {
@@ -46,20 +42,24 @@ const roleColors: Record<UserRole, string> = {
   doctor: 'bg-blue-500/20 text-blue-600 border border-blue-500/30',
   nurse: 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30',
   receptionist: 'bg-amber-500/20 text-amber-600 border border-amber-500/30',
+  pharmacist: 'bg-teal-500/20 text-teal-600 border border-teal-500/30',
+  accountant: 'bg-rose-500/20 text-rose-600 border border-rose-500/30',
 };
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { currentRole, setCurrentRole, setIsLoggedIn } = useRole();
+  const { currentRole, setIsLoggedIn } = useRole();
   const [mobileOpen, setMobileOpen] = useState(false);
   useKeyboardShortcuts();
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'pharmacist', 'accountant'] },
     { path: '/patients', label: 'Patients', icon: Users, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
     { path: '/appointments', label: 'Appointments', icon: Calendar, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
-    { path: '/staff', label: 'Staff Directory', icon: UserCog, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
-    { path: '/billing', label: 'Billing', icon: Receipt, roles: ['admin', 'doctor', 'receptionist'] },
+    { path: '/staff', label: 'Staff', icon: UserCog, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
+    { path: '/payments', label: 'Payments', icon: Receipt, roles: ['admin', 'doctor', 'receptionist', 'accountant'] },
+    { path: '/expenditure', label: 'Expenditure', icon: Wallet, roles: ['admin', 'accountant'] },
+    { path: '/inventory', label: 'Inventory', icon: Boxes, roles: ['admin', 'pharmacist', 'nurse'] },
     { path: '/hr', label: 'HR Management', icon: Briefcase, roles: ['admin'] },
     { path: '/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
   ];
@@ -77,14 +77,11 @@ export function Layout({ children }: LayoutProps) {
       {/* Logo */}
       <div className="relative z-10 flex h-16 items-center justify-between border-b border-border/50 px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm">
-            <Stethoscope className="h-5 w-5 text-primary" />
-          </div>
-          <span className="text-lg font-bold">MedCare HMS</span>
+          <Logo className="h-10 w-10" />
+          <span className="text-lg font-bold">La-tullah Medical</span>
         </div>
         <div className="flex items-center gap-1">
           <NotificationBell />
-          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
@@ -96,37 +93,13 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </div>
 
-      {/* Role Selector */}
+      {/* Signed-in role */}
       <div className="relative z-10 border-b border-border/50 p-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full justify-between border-border/50 bg-background/50 backdrop-blur-sm hover:bg-accent/50"
-            >
-              <span className={cn('rounded-lg px-2.5 py-1 text-xs font-semibold', roleColors[currentRole])}>
-                {roleLabels[currentRole]}
-              </span>
-              <ChevronDown className="h-4 w-4 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 bg-popover/95 backdrop-blur-xl border-border/50" align="start">
-            {(Object.keys(roleLabels) as UserRole[]).map((role) => (
-              <DropdownMenuItem
-                key={role}
-                onClick={() => setCurrentRole(role)}
-                className={cn(
-                  'cursor-pointer transition-colors',
-                  currentRole === role && 'bg-accent'
-                )}
-              >
-                <span className={cn('rounded-lg px-2.5 py-1 text-xs font-semibold', roleColors[role])}>
-                  {roleLabels[role]}
-                </span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex w-full items-center justify-between rounded-lg border border-border/50 bg-background/50 px-3 py-2 backdrop-blur-sm">
+          <span className={cn('rounded-lg px-2.5 py-1 text-xs font-semibold', roleColors[currentRole])}>
+            {roleLabels[currentRole]}
+          </span>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -147,13 +120,13 @@ export function Layout({ children }: LayoutProps) {
                 className={cn(
                   'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-brand/30'
                     : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                 )}
               >
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-xl bg-primary"
+                    className="absolute inset-0 rounded-xl bg-primary border border-border"
                     layoutId="activeNav"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
@@ -191,13 +164,12 @@ export function Layout({ children }: LayoutProps) {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
-            <Stethoscope className="h-5 w-5 text-primary" />
-            <span className="font-bold">MedCare</span>
+            <Logo className="h-7 w-7" />
+            <span className="font-bold">La-tullah</span>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <NotificationBell />
-          <ThemeToggle />
         </div>
       </div>
 

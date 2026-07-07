@@ -13,24 +13,19 @@ import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-
-const accentColors = [
-  { name: 'Blue', value: '210 70% 45%', darkValue: '210 65% 55%', preview: 'bg-blue-500' },
-  { name: 'Violet', value: '262 70% 50%', darkValue: '262 65% 60%', preview: 'bg-violet-500' },
-  { name: 'Emerald', value: '160 70% 40%', darkValue: '160 65% 50%', preview: 'bg-emerald-500' },
-  { name: 'Rose', value: '350 70% 50%', darkValue: '350 65% 55%', preview: 'bg-rose-500' },
-  { name: 'Amber', value: '38 90% 50%', darkValue: '38 85% 55%', preview: 'bg-amber-500' },
-];
+import { ACCENT_COLORS as accentColors, applyAccentColor, applyAnimationSpeed } from '@/lib/preferences';
 
 export default function Settings() {
   const { toast } = useToast();
-  const [hospitalName, setHospitalName] = useState('MedCare General Hospital');
-  const [address, setAddress] = useState('123 Healthcare Boulevard, Springfield');
-  const [phone, setPhone] = useState('+1 (555) 000-0000');
-  const [email, setEmail] = useState('info@medcare.com');
-  const [selectedAccent, setSelectedAccent] = useState(0);
+  const [hospitalName, setHospitalName] = useState('La-tullah Medical Centre');
+  const [address, setAddress] = useState('Along Mikindani Main Road, Next to Kwa Shee Junction, Mikindani, Mombasa');
+  const [phone, setPhone] = useState('0722 872147 / 0105 361277');
+  const [email, setEmail] = useState('latullahmedcentre@gmail.com');
+  const [selectedAccent, setSelectedAccent] = useState(() => Number(localStorage.getItem('accentColor') ?? 0));
   const [splashEnabled, setSplashEnabled] = useState(() => localStorage.getItem('splashDisabled') !== 'true');
-  const [animationSpeed, setAnimationSpeed] = useState<'normal' | 'fast' | 'off'>(() => (localStorage.getItem('animationSpeed') as any) || 'normal');
+  const [animationSpeed, setAnimationSpeed] = useState<'normal' | 'fast' | 'off'>(
+    () => (localStorage.getItem('animationSpeed') as 'normal' | 'fast' | 'off' | null) ?? 'normal'
+  );
 
   const handleSaveHospitalInfo = () => {
     toast({ title: 'Settings saved', description: 'Hospital information has been updated.' });
@@ -38,10 +33,7 @@ export default function Settings() {
 
   const handleAccentChange = (index: number) => {
     setSelectedAccent(index);
-    const color = accentColors[index];
-    document.documentElement.style.setProperty('--primary', color.value);
-    document.documentElement.style.setProperty('--ring', color.value);
-    document.documentElement.style.setProperty('--sidebar-primary', color.value);
+    applyAccentColor(index);
     localStorage.setItem('accentColor', String(index));
   };
 
@@ -53,13 +45,7 @@ export default function Settings() {
   const handleAnimationSpeed = (speed: 'normal' | 'fast' | 'off') => {
     setAnimationSpeed(speed);
     localStorage.setItem('animationSpeed', speed);
-    if (speed === 'off') {
-      document.documentElement.style.setProperty('--animation-duration', '0s');
-    } else if (speed === 'fast') {
-      document.documentElement.style.setProperty('--animation-duration', '0.1s');
-    } else {
-      document.documentElement.style.removeProperty('--animation-duration');
-    }
+    applyAnimationSpeed(speed);
   };
 
   const settingsCards = [
@@ -77,7 +63,7 @@ export default function Settings() {
             <Label htmlFor="address">Address</Label>
             <Input id="address" value={address} onChange={e => setAddress(e.target.value)} className="bg-background/50 border-border/50" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} className="bg-background/50 border-border/50" />
@@ -235,7 +221,7 @@ export default function Settings() {
           transition={{ duration: 0.5 }}
         >
           <TextReveal>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               <GradientText>Settings</GradientText>
             </h1>
           </TextReveal>
@@ -262,11 +248,11 @@ export default function Settings() {
                           <CardItem translateZ={30}>
                             <CardTitle className="flex items-center gap-2">
                               <motion.div
-                                className="p-2 rounded-xl bg-primary/10 border border-primary/30"
+                                className="p-2 rounded-xl bg-brand/10 border border-brand/30"
                                 whileHover={{ scale: 1.1, rotate: 5 }}
                                 transition={{ type: "spring", stiffness: 300 }}
                               >
-                                <Icon className="h-5 w-5 text-primary" />
+                                <Icon className="h-5 w-5 text-brand" />
                               </motion.div>
                               {card.title}
                             </CardTitle>

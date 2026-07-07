@@ -7,15 +7,20 @@ export const TextReveal = ({
   children,
   className,
   delay = 0,
+  direction = 'up',
 }: {
   children: React.ReactNode;
   className?: string;
   delay?: number;
+  direction?: 'up' | 'left';
 }) => {
+  const initial = direction === 'left' ? { opacity: 0, x: -28 } : { opacity: 0, y: 20 };
+  const animate = direction === 'left' ? { opacity: 1, x: 0 } : { opacity: 1, y: 0 };
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={initial}
+      whileInView={animate}
+      viewport={{ once: true, margin: '-60px' }}
       transition={{
         duration: 0.5,
         delay,
@@ -65,7 +70,7 @@ export const GradientText = ({
   return (
     <span
       className={cn(
-        "bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent",
+        "bg-gradient-to-r from-brand via-brand/80 to-brand-red bg-clip-text text-transparent",
         className
       )}
     >

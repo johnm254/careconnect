@@ -37,7 +37,7 @@ export const Spotlight = ({
           background: useMotionTemplate`
             radial-gradient(
               350px circle at ${mouseX}px ${mouseY}px,
-              hsl(var(--primary) / 0.15),
+              hsl(var(--brand) / 0.15),
               transparent 80%
             )
           `,

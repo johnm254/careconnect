@@ -65,10 +65,10 @@ export const BackgroundBeams = ({ className }: { className?: string }) => {
                 delay: Math.random() * 10,
               }}
             >
-              <stop stopColor="hsl(var(--primary))" stopOpacity="0" />
-              <stop stopColor="hsl(var(--primary))" />
-              <stop offset="32.5%" stopColor="hsl(var(--primary) / 0.8)" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+              <stop stopColor="hsl(var(--brand))" stopOpacity="0" />
+              <stop stopColor="hsl(var(--brand))" />
+              <stop offset="32.5%" stopColor="hsl(var(--brand) / 0.8)" />
+              <stop offset="100%" stopColor="hsl(var(--brand))" stopOpacity="0" />
             </motion.linearGradient>
           ))}
         </defs>

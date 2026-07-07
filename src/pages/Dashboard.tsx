@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useRole } from '@/contexts/RoleContext';
-import { mockDashboardStats, weeklyAppointmentsData, recentActivity, mockAppointments } from '@/data/mockData';
-import { Users, Calendar, Receipt, Bed, UserPlus, CalendarPlus, Activity, Clock } from 'lucide-react';
+import { weeklyAppointmentsData, recentActivity } from '@/data/mockData';
+import { Users, Calendar, Receipt, Bed, UserPlus, CalendarPlus, Activity, Clock, PackageX } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
@@ -10,15 +10,10 @@ import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/spotlight';
 import { TextReveal, GradientText } from '@/components/ui/text-reveal';
 import { CardContainer, CardBody, CardItem } from '@/components/ui/card-3d';
-import { useLoading } from '@/hooks/use-loading';
 import { DashboardSkeleton } from '@/components/ui/skeleton-shimmer';
-
-const statCards = [
-  { label: 'Total Patients', value: mockDashboardStats.totalPatients, icon: Users, gradient: 'from-blue-500/20 to-blue-600/5' },
-  { label: "Today's Appointments", value: mockDashboardStats.todayAppointments, icon: Calendar, gradient: 'from-emerald-500/20 to-emerald-600/5' },
-  { label: 'Pending Bills', value: mockDashboardStats.pendingBills, icon: Receipt, gradient: 'from-amber-500/20 to-amber-600/5' },
-  { label: 'Available Beds', value: mockDashboardStats.availableBeds, icon: Bed, gradient: 'from-violet-500/20 to-violet-600/5' },
-];
+import { useDashboardStats } from '@/hooks/api/useDashboard';
+import { useAppointments } from '@/hooks/api/useAppointments';
+import { useInventoryAlerts } from '@/hooks/api/useInventory';
 
 const activityIcons: Record<string, typeof Activity> = {
   patient: Users,
@@ -29,11 +24,20 @@ const activityIcons: Record<string, typeof Activity> = {
 export default function Dashboard() {
   const { currentRole } = useRole();
   const navigate = useNavigate();
-  const isLoading = useLoading(800);
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
 
-  const todayAppointments = mockAppointments.filter(apt => apt.date === '2025-01-30');
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: todayAppointments, isLoading: apptsLoading } = useAppointments({ date: today });
+  const { data: alerts } = useInventoryAlerts();
 
-  if (isLoading) {
+  const statCards = [
+    { label: 'Total Patients', value: stats?.totalPatients ?? 0, icon: Users, gradient: 'from-blue-500/20 to-blue-600/5' },
+    { label: "Today's Appointments", value: stats?.todayAppointments ?? 0, icon: Calendar, gradient: 'from-emerald-500/20 to-emerald-600/5' },
+    { label: 'Pending Bills', value: stats?.pendingBills ?? 0, icon: Receipt, gradient: 'from-amber-500/20 to-amber-600/5' },
+    { label: 'Available Beds', value: stats?.availableBeds ?? 0, icon: Bed, gradient: 'from-violet-500/20 to-violet-600/5' },
+  ];
+
+  if (statsLoading || apptsLoading) {
     return (
       <Layout>
         <DashboardSkeleton />
@@ -45,15 +49,15 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-8">
         {/* Header */}
-        <motion.div 
-          className="flex items-center justify-between"
+        <motion.div
+          className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div>
             <TextReveal>
-              <h1 className="text-3xl font-bold tracking-tight">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 <GradientText>Dashboard</GradientText>
               </h1>
             </TextReveal>
@@ -61,8 +65,8 @@ export default function Dashboard() {
               <p className="text-muted-foreground">Welcome back! Here's what's happening today.</p>
             </TextReveal>
           </div>
-          <motion.div 
-            className="flex gap-3"
+          <motion.div
+            className="flex flex-wrap gap-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
@@ -76,7 +80,7 @@ export default function Dashboard() {
                   </Button>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button onClick={() => navigate('/appointments')} className="gap-2 shadow-lg shadow-primary/20">
+                  <Button onClick={() => navigate('/appointments')} className="gap-2 shadow-lg shadow-brand/20">
                     <CalendarPlus className="h-4 w-4" />
                     New Appointment
                   </Button>
@@ -115,7 +119,7 @@ export default function Dashboard() {
                                 whileHover={{ scale: 1.1, rotate: 5 }}
                                 transition={{ type: "spring", stiffness: 300 }}
                               >
-                                <Icon className="h-7 w-7 text-primary" />
+                                <Icon className="h-7 w-7 text-brand" />
                               </motion.div>
                             </CardItem>
                           </div>
@@ -142,10 +146,10 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <motion.div
-                      className="p-2 rounded-lg bg-primary/10"
+                      className="p-2 rounded-lg bg-brand/10"
                       whileHover={{ scale: 1.1 }}
                     >
-                      <Activity className="h-5 w-5 text-primary" />
+                      <Activity className="h-5 w-5 text-brand" />
                     </motion.div>
                     Weekly Appointments
                   </CardTitle>
@@ -164,7 +168,7 @@ export default function Dashboard() {
                           boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)',
                         }}
                       />
-                      <Bar dataKey="appointments" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="appointments" fill="hsl(var(--brand))" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -183,10 +187,10 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <motion.div
-                      className="p-2 rounded-lg bg-primary/10"
+                      className="p-2 rounded-lg bg-brand/10"
                       whileHover={{ scale: 1.1 }}
                     >
-                      <Clock className="h-5 w-5 text-primary" />
+                      <Clock className="h-5 w-5 text-brand" />
                     </motion.div>
                     Recent Activity
                   </CardTitle>
@@ -205,10 +209,10 @@ export default function Dashboard() {
                           whileHover={{ x: 5 }}
                         >
                           <motion.div 
-                            className="rounded-xl bg-primary/10 p-2.5"
+                            className="rounded-xl bg-brand/10 p-2.5"
                             whileHover={{ scale: 1.1, rotate: 5 }}
                           >
-                            <Icon className="h-4 w-4 text-primary" />
+                            <Icon className="h-4 w-4 text-brand" />
                           </motion.div>
                           <div className="flex-1">
                             <p className="text-sm font-medium">{activity.message}</p>
@@ -224,6 +228,28 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
+        {/* Inventory Alerts */}
+        {alerts && (alerts.lowStock.length > 0 || alerts.expiring.length > 0) && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7, duration: 0.5 }} className="grid gap-4 md:grid-cols-2">
+            {alerts.lowStock.length > 0 && (
+              <Card className="border-amber-500/30 bg-amber-500/5 cursor-pointer" onClick={() => navigate('/inventory')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <PackageX className="h-5 w-5 text-amber-600 shrink-0" />
+                  <p className="text-sm"><span className="font-semibold">{alerts.lowStock.length}</span> inventory item(s) low on stock</p>
+                </CardContent>
+              </Card>
+            )}
+            {alerts.expiring.length > 0 && (
+              <Card className="border-red-500/30 bg-red-500/5 cursor-pointer" onClick={() => navigate('/inventory')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <PackageX className="h-5 w-5 text-red-600 shrink-0" />
+                  <p className="text-sm"><span className="font-semibold">{alerts.expiring.length}</span> item(s) expiring soon or expired</p>
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
+        )}
+
         {/* Today's Appointments */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -235,17 +261,17 @@ export default function Dashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <motion.div
-                    className="p-2 rounded-lg bg-primary/10"
+                    className="p-2 rounded-lg bg-brand/10"
                     whileHover={{ scale: 1.1 }}
                   >
-                    <Calendar className="h-5 w-5 text-primary" />
+                    <Calendar className="h-5 w-5 text-brand" />
                   </motion.div>
                   Today's Appointments
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {todayAppointments.length === 0 ? (
+                  {!todayAppointments || todayAppointments.length === 0 ? (
                     <motion.p 
                       className="text-center text-muted-foreground py-8"
                       initial={{ opacity: 0 }}
@@ -257,26 +283,26 @@ export default function Dashboard() {
                     todayAppointments.map((apt, index) => (
                       <motion.div
                         key={apt.id}
-                        className="flex items-center justify-between rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 hover:bg-accent/30 transition-all"
+                        className="flex flex-col gap-3 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 hover:bg-accent/30 transition-all sm:flex-row sm:items-center sm:justify-between"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.9 + index * 0.1 }}
                         whileHover={{ scale: 1.01, x: 5 }}
                       >
                         <div className="flex items-center gap-4">
-                          <motion.div 
-                            className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-lg"
+                          <motion.div
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand font-bold text-lg"
                             whileHover={{ scale: 1.1, rotate: 5 }}
                           >
-                            {apt.time.split(':')[0]}
+                            {apt.scheduled_time.split(':')[0]}
                           </motion.div>
                           <div>
-                            <p className="font-semibold">{apt.patientName}</p>
-                            <p className="text-sm text-muted-foreground">{apt.doctorName}</p>
+                            <p className="font-semibold">{apt.patient_name}</p>
+                            <p className="text-sm text-muted-foreground">{apt.doctor_name}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{apt.time}</p>
+                        <div className="text-left sm:text-right">
+                          <p className="text-sm font-medium">{apt.scheduled_time}</p>
                           <motion.span
                             className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
                               apt.status === 'confirmed'

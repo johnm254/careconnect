@@ -26,7 +26,7 @@ export const FloatingParticles = ({
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className="absolute rounded-full bg-primary/20"
+          className="absolute rounded-full bg-brand/20"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,

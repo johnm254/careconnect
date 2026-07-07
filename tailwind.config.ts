@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        serif: ["'Lora'", "Georgia", "serif"],
+        sans: ["'Source Sans 3'", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -22,6 +26,12 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+        },
+        brand: {
+          DEFAULT: "hsl(var(--brand))",
+          foreground: "hsl(var(--brand-foreground))",
+          red: "hsl(var(--brand-red))",
+          "red-foreground": "hsl(var(--brand-red-foreground))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

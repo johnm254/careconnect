@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "careconnect-hms",
+  "compatibility_date": "2026-07-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./worker/index.ts",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "careconnect-db",
+      "database_id": "6aa9b351-842a-4292-a11c-4dcd5e74d51e",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "vars": {
+    "APP_ENV": "production"
+  }
+}
