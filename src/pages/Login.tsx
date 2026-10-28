@@ -6,15 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Stethoscope, Shield, UserCog, Heart, ClipboardList } from 'lucide-react';
+import { Stethoscope, Shield, UserCog, Heart, ClipboardList, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { BackgroundBeams } from '@/components/ui/background-beams';
-import { Spotlight } from '@/components/ui/spotlight';
-import { GradientOrb } from '@/components/ui/animated-gradient';
-import { TextReveal, GradientText } from '@/components/ui/text-reveal';
+import { GradientText } from '@/components/ui/text-reveal';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+
+const PANEL_IMAGE =
+  'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=900&q=85';
 
 const roles: { role: UserRole; label: string; description: string; icon: typeof Shield }[] = [
   { role: 'admin', label: 'Administrator', description: 'Full system access', icon: Shield },
@@ -49,78 +49,101 @@ export default function Login() {
         <ThemeToggle />
       </motion.div>
 
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <GradientOrb className="left-1/4 top-1/4" />
-        <GradientOrb className="right-1/4 bottom-1/4 bg-primary/10" />
-      </div>
-      <FloatingParticles className="z-0" quantity={30} />
-      
-      {/* Left Panel - Branding */}
-      <div className="relative hidden w-1/2 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <BackgroundBeams className="z-0" />
-        
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative z-10 flex items-center gap-3"
-        >
-          <motion.div 
-            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/20 backdrop-blur-sm border border-primary/30"
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Stethoscope className="h-8 w-8 text-primary" />
-          </motion.div>
-          <span className="text-2xl font-bold text-foreground">MedCare HMS</span>
-        </motion.div>
-        
-        <div className="relative z-10">
-          <TextReveal delay={0.2}>
-            <h1 className="text-5xl font-bold leading-tight text-foreground">
-              Hospital Management
-              <br />
-              <GradientText>Made Simple</GradientText>
-            </h1>
-          </TextReveal>
-          <TextReveal delay={0.4}>
-            <p className="mt-6 text-lg text-muted-foreground max-w-md">
-              Streamline patient care, appointments, and billing with our modern healthcare management system.
-            </p>
-          </TextReveal>
-          
-          <motion.div 
-            className="mt-8 flex gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-          >
-            {[
-              { label: '10k+', desc: 'Patients Served' },
-              { label: '500+', desc: 'Doctors' },
-              { label: '99.9%', desc: 'Uptime' },
-            ].map((stat, i) => (
-              <Spotlight key={i} className="p-4">
-                <p className="text-2xl font-bold text-primary">{stat.label}</p>
-                <p className="text-sm text-muted-foreground">{stat.desc}</p>
-              </Spotlight>
-            ))}
-          </motion.div>
+      {/* Back to Landing */}
+      <motion.button
+        onClick={() => navigate('/')}
+        className="fixed left-4 top-4 z-50 flex items-center gap-1.5 p-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        <span className="hidden sm:inline">Back</span>
+      </motion.button>
+
+      <FloatingParticles className="z-0 opacity-20" quantity={20} />
+
+      {/* Left Panel — full-bleed photo */}
+      <div className="relative hidden min-h-screen w-1/2 lg:block">
+        <div className="absolute inset-0">
+          <img
+            src={PANEL_IMAGE}
+            alt="Medical professional"
+            className="h-full w-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
         </div>
-        
-        <motion.p 
-          className="relative z-10 text-sm text-muted-foreground"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          © 2025 MedCare HMS. All rights reserved.
-        </motion.p>
+
+        <div className="relative z-10 flex h-full flex-col justify-between p-12">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center gap-3"
+          >
+            <motion.div
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25"
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              <Stethoscope className="h-7 w-7 text-white" />
+            </motion.div>
+            <span className="text-2xl font-bold text-white">MedCare HMS</span>
+          </motion.div>
+
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+            >
+              <h1 className="text-5xl font-bold leading-tight tracking-tight text-white">
+                Hospital Management
+                <br />
+                <GradientText>Made Simple</GradientText>
+              </h1>
+              <p className="mt-5 text-lg text-white/70 max-w-md">
+                Streamline patient care, appointments, and billing with our modern healthcare management system.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="mt-10 grid grid-cols-3 gap-3"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              {[
+                { label: '10k+', desc: 'Patients Served' },
+                { label: '500+', desc: 'Doctors' },
+                { label: '99.9%', desc: 'Uptime' },
+              ].map((stat, i) => (
+                <div key={i} className="rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm p-4">
+                  <p className="text-xl font-bold text-primary">{stat.label}</p>
+                  <p className="text-xs text-white/60 mt-0.5">{stat.desc}</p>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          <motion.p
+            className="text-xs text-white/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+          >
+            © 2025 MedCare HMS. All rights reserved.
+          </motion.p>
+        </div>
       </div>
 
       {/* Right Panel - Login Form */}
       <div className="relative z-10 flex w-full items-center justify-center p-8 lg:w-1/2">
+        {/* Mobile background */}
+        <div className="absolute inset-0 z-0 lg:hidden">
+          <img src={PANEL_IMAGE} alt="" className="h-full w-full object-cover opacity-10" />
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -219,7 +242,7 @@ export default function Login() {
                 </motion.div>
 
                 {/* Demo Notice */}
-                <motion.p 
+                <motion.p
                   className="text-center text-xs text-muted-foreground"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -234,13 +257,13 @@ export default function Login() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
                 >
-                  <Button 
-                    type="submit" 
-                    className="w-full relative overflow-hidden group" 
+                  <Button
+                    type="submit"
+                    className="w-full relative overflow-hidden group"
                     size="lg"
                   >
                     <span className="relative z-10">Sign In</span>
-                    <motion.div 
+                    <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary-foreground/20 to-primary/0"
                       initial={{ x: "-100%" }}
                       whileHover={{ x: "100%" }}
@@ -248,31 +271,16 @@ export default function Login() {
                     />
                   </Button>
                 </motion.div>
-                 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border/50" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or</span>
-                  </div>
-                </div>
-                 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+
+                {/* Contact Admin Note */}
+                <motion.p
+                  className="text-center text-xs text-muted-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ delay: 0.9 }}
                 >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full border-border/50 hover:border-primary/50 hover:bg-primary/5"
-                    size="lg"
-                    onClick={() => navigate('/book-consultation')}
-                  >
-                    Book a Consultation
-                  </Button>
-                </motion.div>
+                  Need access? Contact your administrator.
+                </motion.p>
               </form>
             </CardContent>
           </Card>

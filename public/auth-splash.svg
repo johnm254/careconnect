@@ -1,0 +1,73 @@
+<svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e0f2fe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#cffafe;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0891b2;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="600" fill="url(#bgGradient)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="80" cy="100" r="60" fill="#06b6d4" opacity="0.1"/>
+  <circle cx="320" cy="500" r="80" fill="#0891b2" opacity="0.1"/>
+  <circle cx="350" cy="120" r="40" fill="#06b6d4" opacity="0.15"/>
+
+  <!-- Medical cross symbol -->
+  <g transform="translate(200, 150)">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="70" fill="none" stroke="url(#accentGradient)" stroke-width="2" opacity="0.3"/>
+    
+    <!-- Inner glow circle -->
+    <circle cx="0" cy="0" r="65" fill="url(#accentGradient)" opacity="0.1" filter="url(#glow)"/>
+    
+    <!-- Cross -->
+    <g stroke="url(#accentGradient)" stroke-width="8" stroke-linecap="round" filter="url(#glow)">
+      <!-- Vertical -->
+      <line x1="0" y1="-45" x2="0" y2="45"/>
+      <!-- Horizontal -->
+      <line x1="-45" y1="0" x2="45" y2="0"/>
+    </g>
+  </g>
+
+  <!-- Heartbeat line -->
+  <g transform="translate(200, 320)" stroke="url(#accentGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M -80 0 Q -60 -15 -50 0 Q -45 10 -30 10 Q -15 10 -10 0 L 0 0 Q 10 -10 20 0 Q 30 15 45 0 L 80 0"/>
+  </g>
+
+  <!-- Stethoscope representation -->
+  <g transform="translate(200, 450)">
+    <!-- Left earpiece -->
+    <circle cx="-25" cy="-40" r="8" fill="none" stroke="url(#accentGradient)" stroke-width="3"/>
+    <!-- Right earpiece -->
+    <circle cx="25" cy="-40" r="8" fill="none" stroke="url(#accentGradient)" stroke-width="3"/>
+    <!-- Connection lines -->
+    <path d="M -25 -32 Q -15 -20 0 -15 Q 15 -20 25 -32" fill="none" stroke="url(#accentGradient)" stroke-width="3" stroke-linecap="round"/>
+    <!-- Main tube -->
+    <path d="M -15 -15 Q -20 0 -20 20 Q -20 35 0 40 Q 20 35 20 20 Q 20 0 15 -15" fill="none" stroke="url(#accentGradient)" stroke-width="3" stroke-linecap="round"/>
+    <!-- Diaphragm -->
+    <circle cx="0" cy="40" r="12" fill="none" stroke="url(#accentGradient)" stroke-width="2"/>
+    <circle cx="0" cy="40" r="8" fill="url(#accentGradient)" opacity="0.2"/>
+  </g>
+
+  <!-- Floating elements -->
+  <circle cx="60" cy="200" r="5" fill="url(#accentGradient)" opacity="0.4"/>
+  <circle cx="340" cy="250" r="4" fill="url(#accentGradient)" opacity="0.3"/>
+  <circle cx="100" cy="500" r="3" fill="url(#accentGradient)" opacity="0.5"/>
+
+  <!-- Decorative lines -->
+  <line x1="50" y1="550" x2="350" y2="550" stroke="url(#accentGradient)" stroke-width="1" opacity="0.2"/>
+  <line x1="60" y1="570" x2="340" y2="570" stroke="url(#accentGradient)" stroke-width="1" opacity="0.15"/>
+</svg>

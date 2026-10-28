@@ -221,8 +221,8 @@ export default function BookConsultation() {
                   </p>
                   
                   <CardItem translateZ={30} className="w-full">
-                    <Button className="w-full" onClick={() => navigate('/')}>
-                      Return to Home
+                    <Button className="w-full" onClick={() => navigate('/patient/dashboard')}>
+                      Back to Dashboard
                     </Button>
                   </CardItem>
                 </CardContent>
@@ -258,10 +258,10 @@ export default function BookConsultation() {
             <Button
               variant="ghost"
               className="absolute left-4 top-4 backdrop-blur-sm"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/patient/dashboard')}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Login
+              Back
             </Button>
           </motion.div>
           

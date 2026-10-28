@@ -9,7 +9,11 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { SplashScreen } from "@/components/layout/SplashScreen";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import PatientLogin from "./pages/PatientLogin";
+import PatientSignup from "./pages/PatientSignup";
+import PatientDashboard from "./pages/PatientDashboard";
 import BookConsultation from "./pages/BookConsultation";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -22,18 +26,49 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useRole();
-  if (!isLoggedIn) {
-    return <Navigate to="/" replace />;
+// Redirect logged-in users away from the landing page to their dashboard
+function LandingRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, currentRole } = useRole();
+  if (isLoggedIn) {
+    return currentRole === 'patient'
+      ? <Navigate to="/patient/dashboard" replace />
+      : <Navigate to="/dashboard" replace />;
   }
   return <>{children}</>;
 }
 
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useRole();
-  if (isLoggedIn) {
+// Staff login page — redirect if already logged in as staff
+function StaffPublicRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, currentRole } = useRole();
+  if (isLoggedIn && currentRole !== 'patient') {
     return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
+
+// Patient auth pages — redirect if already logged in as patient
+function PatientPublicRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, currentRole } = useRole();
+  if (isLoggedIn && currentRole === 'patient') {
+    return <Navigate to="/patient/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
+
+// Staff-only protected pages
+function StaffProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, currentRole } = useRole();
+  if (!isLoggedIn || currentRole === 'patient') {
+    return <Navigate to="/staff/login" replace />;
+  }
+  return <>{children}</>;
+}
+
+// Patient-only protected pages
+function PatientProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, currentRole } = useRole();
+  if (!isLoggedIn || currentRole !== 'patient') {
+    return <Navigate to="/patient/login" replace />;
   }
   return <>{children}</>;
 }
@@ -44,15 +79,32 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PublicRoute><PageTransition><Login /></PageTransition></PublicRoute>} />
-        <Route path="/book-consultation" element={<PageTransition><BookConsultation /></PageTransition>} />
-        <Route path="/dashboard" element={<ProtectedRoute><PageTransition><Dashboard /></PageTransition></ProtectedRoute>} />
-        <Route path="/patients" element={<ProtectedRoute><PageTransition><Patients /></PageTransition></ProtectedRoute>} />
-        <Route path="/appointments" element={<ProtectedRoute><PageTransition><Appointments /></PageTransition></ProtectedRoute>} />
-        <Route path="/staff" element={<ProtectedRoute><PageTransition><Staff /></PageTransition></ProtectedRoute>} />
-        <Route path="/billing" element={<ProtectedRoute><PageTransition><Billing /></PageTransition></ProtectedRoute>} />
-        <Route path="/hr" element={<ProtectedRoute><PageTransition><HR /></PageTransition></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><PageTransition><Settings /></PageTransition></ProtectedRoute>} />
+        {/* Landing */}
+        <Route path="/" element={<LandingRoute><PageTransition><Landing /></PageTransition></LandingRoute>} />
+
+        {/* Staff auth */}
+        <Route path="/staff/login" element={<StaffPublicRoute><PageTransition><Login /></PageTransition></StaffPublicRoute>} />
+
+        {/* Patient auth */}
+        <Route path="/patient/login" element={<PatientPublicRoute><PageTransition><PatientLogin /></PageTransition></PatientPublicRoute>} />
+        <Route path="/patient/signup" element={<PatientPublicRoute><PageTransition><PatientSignup /></PageTransition></PatientPublicRoute>} />
+
+        {/* Patient protected */}
+        <Route path="/patient/dashboard" element={<PatientProtectedRoute><PageTransition><PatientDashboard /></PageTransition></PatientProtectedRoute>} />
+        <Route path="/book-consultation" element={<PatientProtectedRoute><PageTransition><BookConsultation /></PageTransition></PatientProtectedRoute>} />
+
+        {/* Staff protected */}
+        <Route path="/dashboard" element={<StaffProtectedRoute><PageTransition><Dashboard /></PageTransition></StaffProtectedRoute>} />
+        <Route path="/patients" element={<StaffProtectedRoute><PageTransition><Patients /></PageTransition></StaffProtectedRoute>} />
+        <Route path="/appointments" element={<StaffProtectedRoute><PageTransition><Appointments /></PageTransition></StaffProtectedRoute>} />
+        <Route path="/staff" element={<StaffProtectedRoute><PageTransition><Staff /></PageTransition></StaffProtectedRoute>} />
+        <Route path="/billing" element={<StaffProtectedRoute><PageTransition><Billing /></PageTransition></StaffProtectedRoute>} />
+        <Route path="/hr" element={<StaffProtectedRoute><PageTransition><HR /></PageTransition></StaffProtectedRoute>} />
+        <Route path="/settings" element={<StaffProtectedRoute><PageTransition><Settings /></PageTransition></StaffProtectedRoute>} />
+
+        {/* Legacy redirects */}
+        <Route path="/signup" element={<Navigate to="/staff/login" replace />} />
+
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
